@@ -10,6 +10,7 @@ const navItems = [
   { to: '/members', label: '成员' },
   { to: '/events', label: '活动' },
   { to: '/agri-aid', label: '助农' },
+  { to: '/canteen', label: '食堂' },
   { to: '/check-in', label: '签到' },
   { to: '/community', label: '社区' },
   { to: '/moments', label: '名场面' },

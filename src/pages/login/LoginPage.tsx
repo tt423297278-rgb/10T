@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form'
 import { useState } from 'react'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAppStore } from '../../app/store/useAppStore'
 import { Button } from '../../components/common/Button'
 import { PageMeta } from '../../components/common/PageMeta'
@@ -18,25 +18,30 @@ type LoginForm = z.infer<typeof schema>
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const signInAsDemoUser = useAppStore((state) => state.signInAsDemoUser)
   const signInAsAdmin = useAppStore((state) => state.signInAsAdmin)
   const setToast = useAppStore((state) => state.setToast)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const { register, handleSubmit, formState } = useForm<LoginForm>({ resolver: zodResolver(schema) })
+  const redirectParam = searchParams.get('redirect')
+  const redirectTo = redirectParam?.startsWith('/') && !redirectParam.startsWith('//')
+    ? redirectParam
+    : '/profile'
 
   const onSubmit = async (values: LoginForm) => {
     setErrorMessage(null)
 
     if (!authService.isConfigured) {
       signInAsDemoUser()
-      navigate('/profile')
+      navigate(redirectTo)
       return
     }
 
     try {
       await authService.signIn(values)
       setToast('登录成功')
-      navigate('/profile')
+      navigate(redirectTo)
     } catch (error) {
       setErrorMessage(toAuthMessage(error))
     }

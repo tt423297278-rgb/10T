@@ -1,4 +1,4 @@
-import { CalendarDays, HandHeart, Home, Images, MessageSquareQuote, MessageSquareText, Sprout, UsersRound } from 'lucide-react'
+import { CalendarDays, HandHeart, Home, Images, MessageSquareQuote, MessageSquareText, Sprout, UsersRound, UtensilsCrossed } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 
 const tabs = [
@@ -6,6 +6,7 @@ const tabs = [
   { to: '/members', label: '成员', icon: UsersRound },
   { to: '/events', label: '活动', icon: CalendarDays },
   { to: '/agri-aid', label: '助农', icon: HandHeart },
+  { to: '/canteen', label: '食堂', icon: UtensilsCrossed },
   { to: '/check-in', label: '签到', icon: Sprout },
   { to: '/community', label: '社区', icon: MessageSquareText },
   { to: '/moments', label: '名场面', icon: MessageSquareQuote },
@@ -15,7 +16,7 @@ const tabs = [
 export function MobileTabBar() {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-paper-line bg-field-surface/95 px-2 pb-[max(env(safe-area-inset-bottom),0.35rem)] pt-2 backdrop-blur md:hidden" aria-label="移动端主导航">
-      <div className="mx-auto flex max-w-md gap-1 overflow-x-auto pb-1">
+      <div className="mx-auto flex max-w-md gap-1 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {tabs.map((tab) => {
           const Icon = tab.icon
           return (

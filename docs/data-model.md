@@ -112,6 +112,23 @@
 - `OfficialUpdateMember`：动态与成员多对多。
 - 权限：公开读已发布；管理员写入。
 
+## CanteenPlace
+- 用途：禾伙人食堂中的餐厅与口味记录。
+- 主键：`id text`。
+- 字段：`region`, `city`, `district`, `category`, `category_detail`, `name`, `address`, `price`, `tips`, `note`, `source_sheet`, `source_url`, `source_row`。
+- 来源：用户确认已获创建人授权的腾讯文档“十个勤天&禾伙人全国巡吃”。当前从 32 个区域 CSV 生成只读数据切片；网页按地区延迟加载，不宣称与原表实时同步。
+- 导入规则：每份 CSV 按自身表头识别城市、区县、菜系、地址、店名、价格和提醒列；只保留具有明确店名与食物信息的记录，拒绝价格型标题、未知店名、说明文字、表头和空行。
+- 权限：公开只读；后续若进入数据库，仅管理员或受信任导入流程可写入。
+
+## CanteenRating
+- 用途：记录登录用户对静态餐厅记录的真实到店评分。
+- 主键：`id uuid`；餐厅关联使用稳定的 `place_id text`，不对静态 JSON 建外键。
+- 字段：`user_id`, `place_id`, `taste_score`, `service_score`, `value_score`, `environment_score`, `visited_confirmed`, `created_at`, `updated_at`。
+- 分值：四项均为 `0.5–5.0`，只允许半星递增；综合分为四项均值。
+- 唯一约束：`user_id + place_id`，再次提交通过 upsert 更新原记录，不重复计数。
+- 权限：用户只可读写自己的评分；公开页面通过安全聚合 RPC 读取餐厅人数与各项均分，不返回 `user_id`。
+- 到店边界：当前采用用户自我确认，不宣称已通过订单、定位或管理员人工核验。
+
 ## AdminLog
 - 主键：`id uuid`。
 - 字段：`admin_id`, `action`, `target_type`, `target_id`, `before`, `after`, `created_at`。
@@ -122,4 +139,3 @@
 - 前端仅使用 anon key。
 - Service Role Key 只允许存在于 Edge Functions 或安全服务端。
 - 管理员判断以服务端读取 `Profile.role` 或自定义 claim 为准，不能靠前端隐藏按钮。
-

@@ -6,6 +6,7 @@
 - `/members/:memberId`：成员详情。
 - `/events`：活动日历和列表。
 - `/events/:eventId`：活动详情。
+- `/canteen`：禾伙人食堂，支持城市和食物分类筛选。
 - `/check-in`：每日签到。
 - `/community`：粉丝社区。
 - `/community/:postId`：帖子详情。
@@ -46,4 +47,3 @@
 - 未登录提示：AuthGuard 内联展示登录入口。
 - 无权限提示：AdminGuard 内联展示权限说明。
 - 加载/空/错误：所有核心列表页面保留组件。
-

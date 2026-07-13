@@ -24,6 +24,7 @@ VITE_APP_URL=http://localhost:5173
 ```text
 supabase/migrations/202607010001_initial_schema.sql
 supabase/migrations/202607010002_check_in_rpc.sql
+supabase/migrations/202607130003_canteen_ratings.sql
 ```
 
 已包含：
@@ -34,6 +35,16 @@ supabase/migrations/202607010002_check_in_rpc.sql
 - 所有业务表启用 RLS。
 - `member-media`、`post-media` 两个 Storage bucket 和基础对象策略。
 - `perform_daily_check_in()` RPC，用服务端时间、用户身份、唯一约束和 advisory lock 防止重复签到。
+- `canteen_ratings` 四维评分表、半星校验、到店确认、一人一店唯一约束与 RLS。
+- `get_canteen_rating_summaries()` 聚合 RPC，只公开评分人数和均分，不公开个人评分记录。
+
+## 食堂评分
+
+- 餐厅目录仍来自授权 CSV 生成的静态 JSON；评分表以稳定的 `place_id` 关联餐厅。
+- 匿名用户可调用聚合 RPC 查看综合分和四项均分。
+- 登录用户只能读取、创建和更新自己的评分；唯一约束 `user_id + place_id` 防止重复计数。
+- 前端提交前要求用户确认实际到店；当前是自我声明，不等同于订单或定位核验。
+- 本地未配置 Supabase，或尚未执行 `202607130003_canteen_ratings.sql` 时，评分弹窗会明确提示不可用，不伪造保存成功。
 
 ## Auth 行为
 
