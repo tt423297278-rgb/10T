@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 900" role="img" aria-label="十个勤天十位成员群像占位图">
+  <rect width="720" height="900" fill="#c9b17a"/>
+  <path d="M0 612 C100 580 200 648 340 618 C485 586 570 630 720 604 L720 900 L0 900 Z" fill="#667a45"/>
+  <path d="M0 702 C165 668 315 716 500 690 C595 676 660 688 720 676 L720 900 L0 900 Z" fill="#4f3a27" opacity=".82"/>
+  <g fill="#2f271f">
+    <g transform="translate(58 382)"><circle cx="34" cy="34" r="31"/><path d="M2 78 C18 54 50 54 66 78 L86 226 L-18 226 Z"/></g>
+    <g transform="translate(120 338)"><circle cx="36" cy="36" r="33"/><path d="M1 84 C19 54 53 54 72 84 L94 260 L-22 260 Z"/></g>
+    <g transform="translate(188 384)"><circle cx="34" cy="34" r="31"/><path d="M2 78 C18 55 50 55 66 78 L86 228 L-18 228 Z"/></g>
+    <g transform="translate(250 330)"><circle cx="37" cy="37" r="34"/><path d="M1 86 C20 54 55 54 74 86 L98 272 L-24 272 Z"/></g>
+    <g transform="translate(322 372)"><circle cx="35" cy="35" r="32"/><path d="M2 80 C19 55 52 55 68 80 L90 238 L-20 238 Z"/></g>
+    <g transform="translate(384 334)"><circle cx="37" cy="37" r="34"/><path d="M1 86 C20 54 55 54 74 86 L98 268 L-24 268 Z"/></g>
+    <g transform="translate(452 384)"><circle cx="34" cy="34" r="31"/><path d="M2 78 C18 55 50 55 66 78 L86 228 L-18 228 Z"/></g>
+    <g transform="translate(512 352)"><circle cx="36" cy="36" r="33"/><path d="M1 84 C19 54 53 54 72 84 L94 252 L-22 252 Z"/></g>
+    <g transform="translate(574 396)"><circle cx="33" cy="33" r="30"/><path d="M2 76 C18 56 48 56 64 76 L82 214 L-16 214 Z"/></g>
+    <g transform="translate(632 368)"><circle cx="35" cy="35" r="32"/><path d="M2 80 C19 55 52 55 68 80 L90 230 L-20 230 Z"/></g>
+  </g>
+  <rect x="34" y="42" width="220" height="38" rx="4" fill="#fffaf0" opacity=".9"/>
+  <text x="50" y="67" font-family="Noto Serif SC, serif" font-size="20" fill="#3f2f23">群像占位 · 待授权</text>
+</svg>

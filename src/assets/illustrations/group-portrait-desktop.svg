@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label="十个勤天十位成员群像占位图">
+  <defs>
+    <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#e4d3ad"/>
+      <stop offset=".58" stop-color="#c7b06f"/>
+      <stop offset="1" stop-color="#6c7a49"/>
+    </linearGradient>
+    <linearGradient id="soil" x1="0" x2="1">
+      <stop offset="0" stop-color="#8a5a1f"/>
+      <stop offset="1" stop-color="#4f3a27"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#sky)"/>
+  <path d="M0 658 C250 618 390 694 640 650 C910 603 1060 664 1300 630 C1435 611 1520 620 1600 642 L1600 900 L0 900 Z" fill="url(#soil)" opacity=".9"/>
+  <path d="M0 718 C240 676 470 734 742 706 C1062 673 1280 704 1600 676 L1600 900 L0 900 Z" fill="#667a45" opacity=".65"/>
+  <g stroke="#f7f1e6" stroke-width="2" opacity=".28">
+    <path d="M110 690 l-18 -58 M110 690 l16 -61 M250 705 l-10 -74 M250 705 l22 -68 M1390 672 l-18 -62 M1390 672 l20 -58"/>
+    <path d="M1230 684 l-14 -70 M1230 684 l22 -64 M380 666 l-18 -72 M380 666 l25 -66"/>
+  </g>
+  <g fill="#2f271f" opacity=".9">
+    <g transform="translate(650 386)"><ellipse cx="55" cy="52" rx="42" ry="48"/><path d="M10 116 C28 78 82 78 100 116 L126 290 L-16 290 Z"/></g>
+    <g transform="translate(730 330)"><ellipse cx="58" cy="54" rx="43" ry="50"/><path d="M10 120 C30 76 88 76 108 120 L138 330 L-20 330 Z"/></g>
+    <g transform="translate(810 370)"><ellipse cx="54" cy="50" rx="40" ry="47"/><path d="M12 112 C30 78 78 78 96 112 L122 300 L-12 300 Z"/></g>
+    <g transform="translate(890 312)"><ellipse cx="60" cy="55" rx="44" ry="52"/><path d="M8 124 C33 76 87 76 112 124 L146 345 L-22 345 Z"/></g>
+    <g transform="translate(970 355)"><ellipse cx="56" cy="52" rx="42" ry="49"/><path d="M10 116 C30 78 82 78 102 116 L132 315 L-18 315 Z"/></g>
+    <g transform="translate(1050 320)"><ellipse cx="58" cy="54" rx="43" ry="51"/><path d="M8 122 C31 78 86 78 110 122 L140 340 L-22 340 Z"/></g>
+    <g transform="translate(1130 374)"><ellipse cx="54" cy="50" rx="40" ry="46"/><path d="M12 112 C30 80 78 80 96 112 L124 298 L-14 298 Z"/></g>
+    <g transform="translate(1210 340)"><ellipse cx="58" cy="54" rx="42" ry="50"/><path d="M10 120 C31 78 86 78 108 120 L138 326 L-18 326 Z"/></g>
+    <g transform="translate(1290 390)"><ellipse cx="53" cy="49" rx="39" ry="46"/><path d="M12 110 C30 80 76 80 94 110 L118 286 L-12 286 Z"/></g>
+    <g transform="translate(1370 350)"><ellipse cx="57" cy="53" rx="42" ry="50"/><path d="M10 118 C31 78 84 78 106 118 L136 318 L-18 318 Z"/></g>
+  </g>
+  <g fill="#fffaf0" opacity=".88">
+    <rect x="82" y="78" width="218" height="44" rx="4"/>
+    <text x="102" y="107" font-family="Noto Serif SC, serif" font-size="24" fill="#3f2f23">群像占位 · 待替换授权合照</text>
+  </g>
+</svg>
