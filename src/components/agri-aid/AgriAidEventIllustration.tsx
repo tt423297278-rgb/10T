@@ -373,7 +373,16 @@ export function AgriAidEventIllustration({ event }: { event: AidBoardEvent }) {
 
   return (
     <svg className="agri-event-scene" viewBox="0 0 120 96" aria-hidden="true">
-      <SceneArtwork scene={scene} />
+      <g className="scene-collage-backdrop">
+        <circle className="scene-light-disc" cx="91" cy="20" r="17" />
+        <path className="scene-hill-far" d="M2 62c19-18 35-19 51-7 15-17 38-20 65 2v39H2Z" />
+        <path className="scene-field-strip" d="M0 74c20-10 38-7 57 1 20-11 40-10 63 1v20H0Z" />
+        <path className="scene-field-lines" d="M8 89c18-7 34-7 49 0M65 88c15-7 30-7 47 0" />
+        <path className="scene-wheat-sprig" d="M13 68V31m0 12-7-9m7 17 8-10m-8 21-8-9M105 68V35m0 11-7-9m7 18 8-10" />
+      </g>
+      <g className="scene-main-art">
+        <SceneArtwork scene={scene} />
+      </g>
     </svg>
   )
 }

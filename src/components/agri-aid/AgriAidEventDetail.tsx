@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
-import { CalendarDays, ExternalLink, MapPin, Tags } from 'lucide-react'
+import { CalendarDays, ExternalLink, ImageOff, MapPin, Tags } from 'lucide-react'
 import type { AidBoardEvent } from '../../data/agriAidTimeline'
-import { AgriAidEventIllustration } from './AgriAidEventIllustration'
 
 type AgriAidEventDetailProps = {
   event: AidBoardEvent
@@ -22,14 +21,14 @@ export function AgriAidEventDetail({ event }: AgriAidEventDetailProps) {
   )
 
   const visualLabel = showApprovedPhoto
-    ? event.image.matchLevel === 'exact'
-      ? '事件资料图'
-      : '相关资料图'
-    : event.image.matchLevel === 'placeholder'
-      ? '图片待补充'
-      : imageFailed
-        ? '图片加载失败 · 原创插画'
-        : '原创事件插画'
+    ? event.image.sourceType === 'userProvided'
+      ? '用户提供资料图'
+      : event.image.matchLevel === 'exact'
+        ? '事件公开资料图'
+        : '相关公开资料图'
+    : imageFailed
+      ? '图片加载失败'
+      : '图片待补充'
 
   return (
     <article className="agri-board-detail paper-panel" aria-live="polite">
@@ -42,12 +41,9 @@ export function AgriAidEventDetail({ event }: AgriAidEventDetailProps) {
             onError={() => setImageFailed(true)}
           />
         ) : (
-          <div
-            className="agri-board-detail-illustration"
-            role="img"
-            aria-label={`${event.title}原创事件示意插画`}
-          >
-            <AgriAidEventIllustration event={event} />
+          <div className="agri-board-detail-photo-missing" role="img" aria-label={`${event.title}图片待补充`}>
+            <ImageOff size={30} aria-hidden="true" />
+            <span>事件图片待补充</span>
           </div>
         )}
         <figcaption>{visualLabel}</figcaption>
@@ -65,7 +61,7 @@ export function AgriAidEventDetail({ event }: AgriAidEventDetailProps) {
         <div className="agri-board-detail-facts">
           <span>
             <CalendarDays size={16} aria-hidden="true" />
-            {event.year}.{event.date}
+            {event.date}
           </span>
           {event.location ? (
             <span>
@@ -82,7 +78,7 @@ export function AgriAidEventDetail({ event }: AgriAidEventDetailProps) {
         </div>
         <div className="agri-board-detail-source">
           <span>
-            {event.image.sourceName ? `资料来源：${event.image.sourceName}` : '视觉来源：本项目原创插画'}
+            {event.image.sourceName ? `图片来源：${event.image.sourceName}` : '图片来源待补充'}
           </span>
           {event.image.sourceUrl ? (
             <a href={event.image.sourceUrl} target="_blank" rel="noreferrer">

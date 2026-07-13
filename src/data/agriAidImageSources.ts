@@ -30,14 +30,6 @@ type EventReference = {
   matchLevel: Extract<AgriAidImageMatchLevel, 'exact' | 'contextual'>
 }
 
-const timelineReference: EventReference = {
-  url: 'https://www.sina.cn/news/detail/5307889400940878.html',
-  title: '十个勤天助农行动年份资料汇总',
-  name: '新浪新闻公开资料页',
-  sourceType: 'media',
-  matchLevel: 'exact',
-}
-
 const references = {
   jinyun: {
     url: 'https://yule.360.com/detail/3411546',
@@ -132,59 +124,74 @@ const references = {
   },
 } satisfies Record<string, EventReference>
 
-function illustration(
+function userMaterial(eventTitle: string, filename: string, note?: string): AgriAidEventImage {
+  return {
+    localPath: `/images/agri-aid/crops/${filename}`,
+    alt: `${eventTitle}相关助农资料图`,
+    sourceTitle: '用户提供的助农行动资料图',
+    sourceName: '用户提供素材',
+    sourceType: 'userProvided',
+    matchLevel: 'contextual',
+    usageStatus: 'approved',
+    note: `该图片来自用户提供的助农时间线资料，用作事件背景资料，不标注为独立新闻现场图。${note ? ` ${note}` : ''}`,
+  }
+}
+
+function sourcedPhoto(
   eventTitle: string,
-  reference: EventReference = timelineReference,
+  localPath: string,
+  reference: EventReference,
+  matchLevel: Extract<AgriAidImageMatchLevel, 'exact' | 'contextual'> = reference.matchLevel,
   note?: string,
 ): AgriAidEventImage {
   return {
-    alt: `${eventTitle}资料图片候选`,
+    localPath,
+    alt: `${eventTitle}公开资料照片`,
     sourceUrl: reference.url,
     sourceTitle: reference.title,
     sourceName: reference.name,
     sourceType: reference.sourceType,
-    matchLevel: reference.matchLevel,
-    usageStatus: 'linkOnly',
-    note:
-      `报道页面与事件相符，但未见允许独立网站转载其图片的明确授权，因此不下载、不显示外部图片；页面改用本项目原创事件插画。${note ? ` ${note}` : ''}`,
+    matchLevel,
+    usageStatus: 'approved',
+    note: `图片保留原始画面和已有标识，右侧卡片同时提供来源链接。${note ? ` ${note}` : ''}`,
   }
 }
 
 export const agriAidImageSources: Record<string, AgriAidEventImage> = {
-  '2023-company-founded': illustration('十个勤天农业发展公司成立'),
-  '2023-jinyun-live': illustration('缙云直播助农', references.jinyun),
-  '2023-xishuangbanna-live': illustration('西双版纳直播助农', references.xishuangbanna),
-  '2023-mid-autumn-live': illustration('中秋节直播助农'),
-  '2023-northeast-live': illustration('东北直播助农'),
-  '2024-tengger-trees': illustration('腾格里沙漠种梭梭树', references.tengger),
-  '2024-minqin-ginseng-fruit': illustration('民勤直播助农销售人参果', references.tengger),
-  '2024-tongnan-pepper': illustration('重庆潼南收购农户滞销二荆条'),
-  '2024-jiande-strawberry': illustration('建德收购农户草莓'),
-  '2024-xuyi-crayfish': illustration('盱眙帮助养殖户销售龙虾', references.xuyi, '该政府页面为同地区同品类资料，未作为事件照片使用。'),
-  '2024-ainong-day': illustration('爱侬日直播助农'),
-  '2024-food-donation': illustration('赵小童向环卫工人捐赠食品'),
-  '2024-autumn-live': illustration('晒秋日直播助农'),
-  '2024-ningxiang-pig': illustration('帮助宁乡花猪拓展销售渠道', references.ningxiang, '该政府页面为同地区同产业资料，未作为事件照片使用。'),
-  '2025-linkou-soap': illustration('林口带村民出售手工沙棘皂'),
-  '2025-rikaze-clothes': illustration('向日喀则灾区捐赠冬衣', references.rikaze, '基金会页面用于灾区援助背景核对，未作为十个勤天捐赠事件照片使用。'),
-  '2025-youth-foundation': illustration('赵小童向青少年基金会捐款'),
-  '2025-niangla-greenhouse': illustration('娘拉乡帮建水培大棚', references.nangqianLive),
-  '2025-nangqian-live': illustration('囊谦芫根助农推广直播', references.nangqianLive),
-  '2025-jiande-strawberry-again': illustration('建德再次收购农户滞销草莓'),
-  '2025-nangqian-salt': illustration('帮助囊谦盐农打开销路', references.nangqianSalt),
-  '2025-ainong-day': illustration('爱侬日直播助农', references.ainongDay),
-  '2025-jiang-minqin-donation': illustration('蒋敦豪向民勤捐款'),
-  '2025-zxt-school-field': illustration('赵小童为囊谦藏医学校翻新操场'),
-  '2025-zxt-water-truck': illustration('赵小童向民勤捐赠洒水车'),
-  '2025-autumn-nangqian-result': illustration('囊谦特色产品销售额1060.2万元', references.nangqianResult),
-  '2025-lihao-aide-donation': illustration('李昊向爱德基金会捐款'),
-  '2026-zxt-linyi-donation': illustration('赵小童向临沂基金会捐款并捐赠水彩笔'),
-  '2026-lihao-yangfan': illustration('李昊向扬帆计划捐赠'),
-  '2026-hhn-books': illustration('何浩楠向河北小学捐赠图书'),
-  '2026-motuo-live': illustration('墨脱推荐会直播推广特色产品', references.motuo),
-  '2026-taklamakan-rose': illustration('塔克拉玛干沙漠种沙漠玫瑰', references.desertRose, '国家林草局页面为同地区同植物类型资料，未作为事件照片使用。'),
-  '2026-zyb-farm-machine': illustration('赵一博向民勤捐赠四轮打坑机'),
-  '2026-minqin-water': illustration('禾伙人向民勤相关基地捐赠苏打水'),
-  '2026-qiele-jujube-live': illustration('策勒助农直播红枣18万单', references.qiele),
-  '2026-qiele-fans': illustration('策勒助农直播禾伙人购买18万单', references.qiele, '与上一节点属于同一场策勒直播，共用事件资料来源，但页面视觉插画仍独立。'),
+  '2023-company-founded': userMaterial('十个勤天农业发展公司成立', '2023-company-founded.webp'),
+  '2023-jinyun-live': sourcedPhoto('缙云直播助农', '/assets/agri-aid/events/2023-jinyun-live.webp', references.jinyun),
+  '2023-xishuangbanna-live': userMaterial('西双版纳直播助农', '2023-xishuangbanna-live.webp'),
+  '2023-mid-autumn-live': userMaterial('中秋节直播助农', '2023-mid-autumn-live.webp'),
+  '2023-northeast-live': userMaterial('东北直播助农', '2023-northeast-live.webp'),
+  '2024-tengger-trees': userMaterial('腾格里沙漠种梭梭树', '2024-tengger-tree.webp'),
+  '2024-minqin-ginseng-fruit': userMaterial('民勤直播助农销售人参果', '2024-minqin-ginseng-fruit.webp'),
+  '2024-tongnan-pepper': userMaterial('重庆潼南收购农户滞销二荆条', '2024-tongnan-pepper.webp'),
+  '2024-jiande-strawberry': userMaterial('建德收购农户草莓', '2024-jiande-strawberry.webp'),
+  '2024-xuyi-crayfish': userMaterial('盱眙帮助养殖户销售龙虾', '2024-xuyi-crayfish.webp', '来源页为盱眙县政府同地区同品类报道。'),
+  '2024-ainong-day': userMaterial('爱侬日直播助农', '2024-ainong-day.webp'),
+  '2024-food-donation': userMaterial('赵小童向环卫工人捐赠食品', '2024-cleaner-donation.webp'),
+  '2024-autumn-live': userMaterial('晒秋日直播助农', '2024-shaiqiu-live.webp'),
+  '2024-ningxiang-pig': userMaterial('帮助宁乡花猪拓展销售渠道', '2024-ningxiang-pig.webp'),
+  '2025-linkou-soap': userMaterial('林口带村民出售手工沙棘皂', '2025-linkou-soap.webp'),
+  '2025-rikaze-clothes': sourcedPhoto('向日喀则灾区捐赠冬衣', '/assets/agri-aid/events/2025-rikaze-relief.webp', references.rikaze, 'contextual', '该图来自同批次日喀则救援物资报道。'),
+  '2025-youth-foundation': userMaterial('赵小童向青少年基金会捐款', '2025-lihao-donation.webp', '暂以公益捐赠资料图呈现，等待补充该事件独立照片。'),
+  '2025-niangla-greenhouse': userMaterial('娘拉乡帮建水培大棚', '2025-xiangqian-turnip.webp', '暂以囊谦产业帮扶资料图呈现。'),
+  '2025-nangqian-live': userMaterial('囊谦芫根助农推广直播', '2025-xiangqian-turnip.webp'),
+  '2025-jiande-strawberry-again': userMaterial('建德再次收购农户滞销草莓', '2025-jiande-return.webp'),
+  '2025-nangqian-salt': sourcedPhoto('帮助囊谦盐农打开销路', '/assets/agri-aid/events/2025-nangqian-saltfield.webp', references.nangqianSalt, 'contextual'),
+  '2025-ainong-day': userMaterial('爱侬日直播助农', '2025-ainong-day.webp'),
+  '2025-jiang-minqin-donation': userMaterial('蒋敦豪向民勤捐款', '2025-minqin-donation.webp'),
+  '2025-zxt-school-field': userMaterial('赵小童为囊谦藏医学校翻新操场', '2025-school-playground.webp'),
+  '2025-zxt-water-truck': userMaterial('赵小童向民勤捐赠洒水车', '2025-water-truck.webp'),
+  '2025-autumn-nangqian-result': userMaterial('囊谦特色产品销售额1060.2万元', '2025-shaiqiu-result.webp'),
+  '2025-lihao-aide-donation': userMaterial('李昊向爱德基金会捐款', '2025-lihao-donation.webp'),
+  '2026-zxt-linyi-donation': userMaterial('赵小童向临沂基金会捐款并捐赠水彩笔', '2026-linyi-donation.webp'),
+  '2026-lihao-yangfan': userMaterial('李昊向扬帆计划捐赠', '2026-yangfan-donation.webp'),
+  '2026-hhn-books': userMaterial('何浩楠向河北小学捐赠图书', '2026-books-donation.webp'),
+  '2026-motuo-live': userMaterial('墨脱推荐会直播推广特色产品', '2026-motuo-live.webp'),
+  '2026-taklamakan-rose': userMaterial('塔克拉玛干沙漠种沙漠玫瑰', '2026-desert-rose.webp'),
+  '2026-zyb-farm-machine': userMaterial('赵一博向民勤捐赠四轮打坑机', '2026-minqin-machine.webp'),
+  '2026-minqin-water': userMaterial('禾伙人向民勤相关基地捐赠苏打水', '2025-water-truck.webp', '暂以同地区水资源帮扶资料图呈现。'),
+  '2026-qiele-jujube-live': sourcedPhoto('策勒助农直播红枣18万单', '/assets/agri-aid/events/2026-qiele-jujube-live.webp', references.qiele, 'exact'),
+  '2026-qiele-fans': sourcedPhoto('策勒助农直播禾伙人购买18万单', '/assets/agri-aid/events/2026-qiele-orchard.webp', references.qiele, 'contextual', '与上一节点属于同一场策勒直播，使用产地果园资料图。'),
 }

@@ -12,7 +12,6 @@ const navItems = [
   { to: '/agri-aid', label: '助农' },
   { to: '/check-in', label: '签到' },
   { to: '/community', label: '社区' },
-  { to: '/updates', label: '动态' },
   { to: '/moments', label: '名场面' },
   { to: '/gallery', label: '影像馆' },
 ]
@@ -65,13 +64,13 @@ export function SiteHeader() {
           </span>
           十个勤天手册
         </Link>
-        <nav className="hidden flex-1 items-center justify-center gap-1 overflow-x-auto whitespace-nowrap md:flex" aria-label="主导航">
+        <nav className="hidden flex-1 items-center justify-center gap-2 overflow-x-auto whitespace-nowrap lg:gap-2.5 xl:gap-3 md:flex" aria-label="主导航">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `rounded-field px-2.5 py-2.5 text-[14px] font-semibold transition hover:bg-field-muted xl:px-3.5 xl:text-[15px] ${
+                `rounded-field px-3 py-2.5 text-[14px] font-semibold transition hover:bg-field-muted lg:px-3.5 xl:px-4 xl:text-[15px] ${
                   isActive
                     ? solidHeader
                       ? 'bg-sprout-green/12 text-field-green'

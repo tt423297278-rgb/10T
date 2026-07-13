@@ -186,6 +186,10 @@
   box-shadow: 0 7px 20px rgb(61 45 24 / 0.08) !important;
 }
 
+.agri-board-filter-panel > div {
+  min-width: 0;
+}
+
 .agri-board-filter-panel::before,
 .agri-board-filter-panel::after {
   position: absolute;
@@ -206,6 +210,8 @@
 }
 
 .agri-board-filter-scroll {
+  width: 100%;
+  max-width: 100%;
   gap: 0.38rem !important;
   padding: 0.08rem 0 0.24rem;
 }
@@ -520,6 +526,7 @@
 
 .agri-board-node-illustration {
   position: relative;
+  isolation: isolate;
   display: grid !important;
   place-items: center;
   width: 4.65rem !important;
@@ -528,9 +535,12 @@
   color: var(--aid-year-accent) !important;
   border-radius: 46% 54% 50% 44%;
   background:
-    radial-gradient(circle at 34% 30%, rgb(255 252 241 / 0.9) 0 14%, transparent 15%),
-    linear-gradient(145deg, var(--aid-year-soft), rgb(255 248 232 / 0.78));
-  box-shadow: inset 0 0 0 1px rgb(98 117 58 / 0.12), 0 5px 10px rgb(61 45 24 / 0.08);
+    radial-gradient(circle at 28% 22%, rgb(255 252 241 / 0.98) 0 13%, transparent 14%),
+    linear-gradient(155deg, color-mix(in srgb, var(--aid-year-soft) 88%, #fff), rgb(255 248 232 / 0.9));
+  box-shadow:
+    inset 0 0 0 1px rgb(98 117 58 / 0.16),
+    inset 0 -0.55rem 1rem rgb(184 135 62 / 0.08),
+    0 5px 10px rgb(61 45 24 / 0.1);
   transition: transform 280ms ease-out, box-shadow 280ms ease-out;
 }
 
@@ -565,10 +575,54 @@
 }
 
 .agri-event-scene {
-  width: 108%;
-  height: 108%;
+  width: 116%;
+  height: 116%;
   overflow: visible;
   filter: drop-shadow(0 3px 2px rgb(61 45 24 / 0.16));
+}
+
+.scene-collage-backdrop {
+  opacity: 0.92;
+}
+
+.scene-light-disc {
+  fill: rgb(255 249 218 / 0.92);
+  stroke: rgb(184 135 62 / 0.28);
+  stroke-width: 1.2;
+}
+
+.scene-hill-far {
+  fill: color-mix(in srgb, var(--aid-year-soft) 72%, #d6dec4);
+  stroke: none;
+}
+
+.scene-field-strip {
+  fill: rgb(214 177 103 / 0.2);
+  stroke: none;
+}
+
+.scene-field-lines {
+  fill: none;
+  stroke: rgb(98 117 58 / 0.28);
+  stroke-width: 1.2;
+  stroke-dasharray: 3 3;
+}
+
+.scene-wheat-sprig {
+  fill: none;
+  stroke: rgb(184 135 62 / 0.46);
+  stroke-width: 1.6;
+}
+
+.scene-main-art {
+  transform-origin: 60px 58px;
+  transition: transform 260ms ease-out;
+}
+
+.agri-board-node:hover .scene-main-art,
+.agri-board-node:focus-visible .scene-main-art,
+.agri-board-node-active .scene-main-art {
+  transform: translateY(-2px) scale(1.04);
 }
 
 .agri-event-scene path,
@@ -733,7 +787,7 @@
 }
 
 .agri-board-detail-media img,
-.agri-board-detail-illustration {
+.agri-board-detail-photo-missing {
   width: 100%;
   height: 100%;
   border-radius: 10px;
@@ -745,20 +799,17 @@
   object-position: center;
 }
 
-.agri-board-detail-illustration {
-  display: grid;
-  place-items: center;
+.agri-board-detail-photo-missing {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--aid-olive-dark);
   background:
-    radial-gradient(circle at 24% 24%, rgb(255 252 241 / 0.9) 0 8%, transparent 9%),
-    linear-gradient(150deg, rgb(226 214 168 / 0.66), rgb(201 219 209 / 0.5));
-}
-
-.agri-board-detail-illustration .agri-event-scene {
-  width: 82%;
-  height: 92%;
-  max-width: 13rem;
-  filter: drop-shadow(0 6px 4px rgb(61 45 24 / 0.18));
+    linear-gradient(135deg, rgb(245 234 204 / 0.86), rgb(213 225 208 / 0.82));
 }
 
 .agri-board-detail-media figcaption {

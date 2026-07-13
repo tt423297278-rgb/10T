@@ -89,14 +89,17 @@
 }
 
 html {
+  max-width: 100%;
+  overflow-x: clip;
   scroll-behavior: smooth;
 }
 
 body {
   position: relative;
-  min-width: 320px;
+  min-width: 0;
   min-height: 100dvh;
   margin: 0;
+  overflow-x: clip;
   background:
     var(--paper-grain),
     radial-gradient(circle at 12% 10%, rgb(214 177 103 / 0.11), transparent 31rem),
