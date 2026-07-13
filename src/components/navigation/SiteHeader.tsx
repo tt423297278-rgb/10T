@@ -43,7 +43,7 @@ export function SiteHeader() {
 
   return (
     <header
-      className={`sticky top-0 z-40 border-b transition duration-200 ${
+      className={`sticky top-0 z-40 border-b transition duration-200 ${location.pathname === '/canteen' ? 'canteen-site-header' : ''} ${
         solidHeader
           ? 'border-paper-line/80 bg-paper-light/94 shadow-field-sm'
           : 'border-paper-line/40 bg-paper-light/72 text-field-ink'

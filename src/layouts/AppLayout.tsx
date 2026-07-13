@@ -18,7 +18,7 @@ export function AppLayout() {
         <motion.main
           key={location.pathname}
           id="main-content"
-          className="min-h-[70dvh]"
+          className={`min-h-[70dvh] ${location.pathname === '/canteen' ? 'canteen-main' : ''}`}
           initial={reduceMotion ? false : { opacity: 0, y: 10 }}
           animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
           exit={reduceMotion ? undefined : { opacity: 0, y: -6 }}
