@@ -1,0 +1,569 @@
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  ArrowUpRight,
+  Beef,
+  Beer,
+  BookOpen,
+  Compass,
+  CookingPot,
+  Croissant,
+  CupSoda,
+  Dices,
+  Fish,
+  Flame,
+  Leaf,
+  Map,
+  MapPin,
+  MapPinned,
+  Pizza,
+  RotateCcw,
+  Salad,
+  Sandwich,
+  Sparkles,
+  Soup,
+  UtensilsCrossed,
+  WalletCards,
+} from 'lucide-react'
+import { useLocation, useSearchParams } from 'react-router-dom'
+import { useAppStore } from '../../app/store/useAppStore'
+import { CanteenPickDialog } from '../../components/canteen/CanteenPickDialog'
+import { CanteenRatingDialog, RatingStars } from '../../components/canteen/CanteenRatingDialog'
+import { Button } from '../../components/common/Button'
+import { PageMeta } from '../../components/common/PageMeta'
+import { StateBlock } from '../../components/common/StateBlock'
+import {
+  canteenImportStats,
+  canteenRegions,
+  canteenSnapshotDate,
+  canteenSourceUrl,
+} from '../../data/canteenManifest'
+import {
+  allFilterValue,
+  canteenPriceBands,
+  filterCanteenPlaces,
+  isCanteenPriceBandId,
+  pickCanteenPlace,
+  type CanteenPriceBandId,
+} from '../../features/canteen/canteenFilters'
+import { loadCanteenRegion } from '../../services/canteenDataService'
+import { canteenRatingService } from '../../services/canteenRatingService'
+import {
+  useCanteenRatingSummaries,
+  useOwnCanteenRating,
+  useSaveCanteenRating,
+} from '../../hooks/useCanteenRatings'
+import type { CanteenPlace, CanteenRatingScores, CanteenRatingSummary } from '../../types/domain'
+
+const pageSize = 24
+const countFormatter = new Intl.NumberFormat('zh-CN')
+const popularCanteenCities = [
+  { city: '北京', region: '北京' },
+  { city: '上海', region: '上海' },
+  { city: '广州', region: '广东' },
+  { city: '杭州', region: '浙江' },
+  { city: '成都', region: '四川' },
+  { city: '重庆', region: '重庆' },
+  { city: '西安', region: '陕西' },
+  { city: '长沙', region: '湖南' },
+  { city: '南京', region: '江苏' },
+  { city: '厦门', region: '福建' },
+] as const
+
+type CanteenFlavorTone = 'classic' | 'fresh' | 'smoke' | 'spicy' | 'staple' | 'sweet'
+
+function getCanteenFlavorTone(category: string): CanteenFlavorTone {
+  if (/(火锅|串串|川菜|湘菜|辣)/.test(category)) return 'spicy'
+  if (/(甜|蛋糕|饮品|奶茶|咖啡|冰)/.test(category)) return 'sweet'
+  if (/(素|轻食|水果|海鲜|鱼)/.test(category)) return 'fresh'
+  if (/(面|粉|米|饺|包|早餐|小吃)/.test(category)) return 'staple'
+  if (/(烤|肉|牛|羊|卤)/.test(category)) return 'smoke'
+  return 'classic'
+}
+
+function CanteenCategoryIcon({ category }: { category: string }) {
+  let Icon = UtensilsCrossed
+
+  if (/(甜品|饮品|奶茶|咖啡|冰)/.test(category)) Icon = CupSoda
+  else if (/(火锅|串串|汤锅|炖菜)/.test(category)) Icon = CookingPot
+  else if (/(烧烤|烤肉)/.test(category)) Icon = Flame
+  else if (/(面食|米粉)/.test(category)) Icon = Soup
+  else if (/(早餐|小吃)/.test(category)) Icon = Croissant
+  else if (/(米饭|简餐)/.test(category)) Icon = Sandwich
+  else if (/(海鲜|河鲜)/.test(category)) Icon = Fish
+  else if (/(卤味|熟食)/.test(category)) Icon = Beef
+  else if (/素食/.test(category)) Icon = Leaf
+  else if (/(酒馆|夜宵)/.test(category)) Icon = Beer
+  else if (/西餐/.test(category)) Icon = Pizza
+  else if (/(东南亚|异国菜)/.test(category)) Icon = Salad
+  else if (/地方菜/.test(category)) Icon = CookingPot
+
+  return <Icon size={18} strokeWidth={1.9} />
+}
+
+function CanteenCard({
+  place,
+  picked,
+  ratingSummary,
+  onRate,
+}: {
+  place: CanteenPlace
+  picked: boolean
+  ratingSummary?: CanteenRatingSummary
+  onRate: () => void
+}) {
+  const flavorTone = getCanteenFlavorTone(place.category)
+
+  return (
+    <article
+      id={`canteen-place-${place.id}`}
+      data-flavor={flavorTone}
+      className={`canteen-place-card relative flex h-full min-w-0 flex-col rounded-[12px] border bg-field-surface/92 p-3 shadow-field-sm transition duration-300 ease-field motion-reduce:transition-none ${
+        picked
+          ? 'border-wheat-gold ring-2 ring-wheat-gold/35'
+          : 'border-paper-line hover:-translate-y-0.5 hover:border-field-green/30 hover:shadow-field-md motion-reduce:hover:translate-y-0'
+      }`}
+    >
+      {picked ? (
+        <span className="absolute right-2.5 top-2.5 rotate-[-7deg] rounded-[6px] border-2 border-wheat-gold bg-paper-light px-2 py-0.5 font-serif text-[11px] font-bold text-soil-brown">
+          开饭签
+        </span>
+      ) : null}
+      <div className="canteen-card-mast" aria-hidden="true">
+        <span><CanteenCategoryIcon category={place.category} /></span>
+      </div>
+      <div className={`flex flex-wrap items-center gap-1.5 ${picked ? 'pr-14' : ''}`}>
+        <span className="field-tag max-w-full truncate px-1.5 py-0.5 text-[11px]" title={`${place.city} · ${place.district}`}>
+          {place.city} · {place.district}
+        </span>
+        <span className="max-w-full truncate rounded-[6px] border border-wheat-gold/35 bg-wheat-gold/10 px-1.5 py-0.5 text-[11px] font-semibold text-soil-brown" title={place.category}>
+          {place.category}
+        </span>
+      </div>
+      <h2 className="mt-3 line-clamp-2 font-serif text-lg font-semibold leading-snug text-field-ink" title={place.name}>{place.name}</h2>
+      {place.categoryDetail ? (
+        <p className="mt-1 line-clamp-1 text-[11px] leading-4 text-field-soft" title={`原表菜系：${place.categoryDetail}`}>原表菜系：{place.categoryDetail}</p>
+      ) : null}
+      <div className="mt-3 grid gap-2 text-xs leading-5 text-field-soft">
+        <p className="flex items-start gap-2">
+          <MapPin className="mt-0.5 size-3.5 shrink-0 text-field-green" aria-hidden="true" />
+          <span className="line-clamp-3" title={place.address}>{place.address}</span>
+        </p>
+        {place.price ? (
+          <p className="flex items-start gap-2">
+            <WalletCards className="mt-0.5 size-3.5 shrink-0 text-field-green" aria-hidden="true" />
+            <span className="line-clamp-1" title={place.price}>{place.price}</span>
+          </p>
+        ) : null}
+      </div>
+      {place.tips ? (
+        <div className="mt-3 rounded-[8px] border border-sky-blue/60 bg-sky-blue/18 px-2.5 py-2 text-xs leading-5 text-field-ink" title={`到店提醒：${place.tips}`}>
+          <p className="line-clamp-3"><span className="font-semibold">到店提醒：</span>{place.tips}</p>
+        </div>
+      ) : null}
+      {place.note ? <p className="mt-3 line-clamp-2 text-xs leading-5 text-field-soft" title={`禾伙人记录：${place.note}`}>禾伙人记录：{place.note}</p> : null}
+      <button
+        type="button"
+        onClick={onRate}
+        className="canteen-rating-button mt-auto flex min-h-11 w-full items-center justify-between gap-2 rounded-[9px] border border-wheat-gold/30 bg-wheat-gold/8 px-2.5 py-2 text-left text-xs font-semibold text-field-ink transition duration-200 hover:border-wheat-gold/55 hover:bg-wheat-gold/14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-field-green motion-reduce:transition-none"
+        aria-label={ratingSummary ? `查看或更新${place.name}的评分，当前综合 ${ratingSummary.overall.toFixed(1)} 星` : `为${place.name}评分`}
+      >
+        <span className="flex min-w-0 items-center gap-1.5">
+          <RatingStars value={ratingSummary?.overall ?? 0} />
+          <span className="tabular-nums">{ratingSummary ? ratingSummary.overall.toFixed(1) : '暂无'}</span>
+        </span>
+        <span className="shrink-0 text-field-green">{ratingSummary ? `${ratingSummary.ratingCount} 人` : '去评分'}</span>
+      </button>
+      <div className="mt-2 border-t border-paper-line pt-2.5 text-[11px] text-field-soft">
+        <a
+          href={place.sourceUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex min-h-11 items-center gap-1 font-semibold leading-4 text-field-green underline decoration-field-green/30 underline-offset-4 hover:decoration-field-green"
+        >
+          核对原表 · {place.sourceSheet}第 {place.sourceRow} 行
+          <ArrowUpRight size={14} aria-hidden="true" />
+        </a>
+      </div>
+    </article>
+  )
+}
+
+export default function CanteenPage() {
+  const location = useLocation()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const user = useAppStore((state) => state.user)
+  const setToast = useAppStore((state) => state.setToast)
+  const [places, setPlaces] = useState<CanteenPlace[]>([])
+  const [loadState, setLoadState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [retryKey, setRetryKey] = useState(0)
+  const [visibleCount, setVisibleCount] = useState(pageSize)
+  const [pickedId, setPickedId] = useState<string | null>(null)
+  const [pickDialogOpen, setPickDialogOpen] = useState(false)
+  const [ratingPlace, setRatingPlace] = useState<CanteenPlace | null>(null)
+
+  const regionParam = searchParams.get('region') ?? allFilterValue
+  const selectedRegion = canteenRegions.find((region) => region.name === regionParam)
+  const region = selectedRegion?.name ?? allFilterValue
+  const cityParam = searchParams.get('city') ?? allFilterValue
+  const city = selectedRegion?.cities.includes(cityParam) ? cityParam : allFilterValue
+  const categoryParam = searchParams.get('category') ?? allFilterValue
+  const category = selectedRegion?.categories.includes(categoryParam) ? categoryParam : allFilterValue
+  const selectedPriceBands = useMemo(
+    () => searchParams.getAll('price').filter(isCanteenPriceBandId),
+    [searchParams],
+  )
+  const priceFilterKey = selectedPriceBands.join(',')
+
+  useEffect(() => {
+    if (!selectedRegion) {
+      setPlaces([])
+      setLoadState('idle')
+      return
+    }
+
+    const controller = new AbortController()
+    setPlaces([])
+    setLoadState('loading')
+
+    loadCanteenRegion(selectedRegion.file, controller.signal)
+      .then((data) => {
+        setPlaces(data)
+        setLoadState('success')
+      })
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === 'AbortError') return
+        setLoadState('error')
+      })
+
+    return () => controller.abort()
+  }, [retryKey, selectedRegion])
+
+  useEffect(() => {
+    setVisibleCount(pageSize)
+    setPickedId(null)
+    setPickDialogOpen(false)
+  }, [category, city, priceFilterKey, region])
+
+  const filteredPlaces = useMemo(
+    () => filterCanteenPlaces(places, { city, category, priceBands: selectedPriceBands }),
+    [category, city, places, selectedPriceBands],
+  )
+  const visiblePlaces = useMemo(
+    () => filteredPlaces.slice(0, visibleCount),
+    [filteredPlaces, visibleCount],
+  )
+  const visiblePlaceIds = useMemo(
+    () => visiblePlaces.map((place) => place.id),
+    [visiblePlaces],
+  )
+  const ratingSummariesQuery = useCanteenRatingSummaries(visiblePlaceIds)
+  const ownRatingQuery = useOwnCanteenRating(ratingPlace?.id, user?.id)
+  const saveRatingMutation = useSaveCanteenRating(ratingPlace?.id, visiblePlaceIds)
+  const pickedPlace = filteredPlaces.find((place) => place.id === pickedId)
+
+  const closeRatingDialog = useCallback(() => setRatingPlace(null), [])
+  const closePickDialog = useCallback(() => setPickDialogOpen(false), [])
+
+  const submitRating = async (scores: CanteenRatingScores) => {
+    await saveRatingMutation.mutateAsync(scores)
+    setToast(ownRatingQuery.data ? '评分已更新' : '评分已提交')
+    closeRatingDialog()
+  }
+
+  const updateFilters = (
+    nextRegion: string,
+    nextCity: string,
+    nextCategory: string,
+    nextPriceBands: CanteenPriceBandId[] = selectedPriceBands,
+  ) => {
+    const params = new URLSearchParams()
+    if (nextRegion !== allFilterValue) params.set('region', nextRegion)
+    if (nextCity !== allFilterValue) params.set('city', nextCity)
+    if (nextCategory !== allFilterValue) params.set('category', nextCategory)
+    nextPriceBands.forEach((priceBand) => params.append('price', priceBand))
+    setSearchParams(params, { replace: true })
+  }
+
+  const resetFilters = () => updateFilters(allFilterValue, allFilterValue, allFilterValue, [])
+
+  const togglePriceBand = (priceBand: CanteenPriceBandId) => {
+    const nextPriceBands = selectedPriceBands.includes(priceBand)
+      ? selectedPriceBands.filter((item) => item !== priceBand)
+      : [...selectedPriceBands, priceBand]
+    updateFilters(region, city, category, nextPriceBands)
+  }
+
+  const handlePick = () => {
+    const place = pickCanteenPlace(filteredPlaces)
+    setPickedId(place?.id ?? null)
+    setPickDialogOpen(Boolean(place))
+  }
+
+  const resultTitle = selectedRegion
+    ? `找到 ${countFormatter.format(filteredPlaces.length)} 个吃饭去处`
+    : `已整理 ${countFormatter.format(canteenImportStats.recordCount)} 条巡吃记录`
+  const priceSummary = selectedPriceBands.length
+    ? canteenPriceBands
+        .filter((band) => selectedPriceBands.includes(band.id))
+        .map((band) => band.label)
+        .join('、')
+    : '全部人均'
+
+  return (
+    <section className="canteen-page py-8 md:py-10">
+      <PageMeta
+        title="禾伙人食堂"
+        description="按省份、城市、食物分类和人均价格浏览禾伙人共同整理的餐厅记录，并查看真实到店评分。"
+        path="/canteen"
+      />
+      <div className="field-container">
+        <div className="canteen-hero relative overflow-hidden rounded-[18px] border border-paper-light/12 px-5 py-7 text-paper-light shadow-field-md md:px-9 md:py-8">
+          <picture className="canteen-hero-media" aria-hidden="true">
+            <source media="(max-width: 639px)" srcSet="/images/canteen/canteen-hero-feast-mobile.webp" />
+            <img src="/images/canteen/canteen-hero-feast.webp" alt="" decoding="async" fetchPriority="high" />
+          </picture>
+          <div className="canteen-hero-shade" aria-hidden="true" />
+          <div className="canteen-hero-glow" aria-hidden="true" />
+          <div className="relative z-10 flex min-h-[240px] flex-col justify-between md:min-h-[260px]">
+            <div className="max-w-3xl">
+              <span className="canteen-hero-kicker inline-flex items-center gap-2 text-sm font-semibold text-wheat-gold">
+                <UtensilsCrossed size={18} aria-hidden="true" />
+                禾伙人食堂 · 城市寻味手账
+              </span>
+              <h1 className="mt-4 max-w-2xl font-serif text-4xl font-semibold leading-tight text-paper-light md:text-5xl">
+                到了这座城，今天吃什么？
+              </h1>
+              <p className="mt-4 max-w-2xl text-base leading-7 text-paper-light/84 md:text-lg">
+                已整理全国巡吃表中的 {countFormatter.format(canteenImportStats.recordCount)} 条记录。先选省份和城市，再按分类与人均缩小范围；拿不定主意，就抽一张开饭签。
+              </p>
+            </div>
+            <div className="canteen-hero-facts mt-7 flex flex-wrap gap-2.5" aria-label="食堂索引概览">
+              <span>
+                <BookOpen size={16} aria-hidden="true" />
+                <strong>{countFormatter.format(canteenImportStats.recordCount)}</strong> 条寻味记录
+              </span>
+              <span>
+                <MapPinned size={16} aria-hidden="true" />
+                <strong>{canteenImportStats.sourceFileCount}</strong> 份地区食单
+              </span>
+              <span>
+                <Sparkles size={16} aria-hidden="true" />
+                随机抽一家
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="canteen-filter-panel relative z-10 mt-5 rounded-[14px] border border-paper-line bg-paper-light/95 p-4 shadow-field-md md:grid md:grid-cols-2 md:items-end md:gap-4 md:p-5 lg:grid-cols-[15.5rem_14rem_15rem_auto_1fr]">
+          <label className="grid gap-1.5 text-sm font-semibold text-field-ink">
+            <span className="canteen-filter-label"><MapPinned size={16} aria-hidden="true" />省份 / 地区</span>
+            <select
+              value={region}
+              onChange={(event) => updateFilters(event.target.value, allFilterValue, allFilterValue)}
+              className="canteen-select field-input min-h-12"
+            >
+              <option value={allFilterValue}>请选择省份 / 地区</option>
+              {canteenRegions.map((item) => (
+                <option key={item.id} value={item.name}>{item.name}（{countFormatter.format(item.count)}）</option>
+              ))}
+            </select>
+          </label>
+          <label className="mt-4 grid gap-1.5 text-sm font-semibold text-field-ink md:mt-0">
+            <span className="canteen-filter-label"><Map size={16} aria-hidden="true" />城市</span>
+            <select
+              value={city}
+              onChange={(event) => updateFilters(region, event.target.value, category)}
+              className="canteen-select field-input min-h-12"
+              disabled={!selectedRegion}
+            >
+              <option value={allFilterValue}>{selectedRegion ? '该地区全部城市' : '请先选择省份 / 地区'}</option>
+              {selectedRegion?.cities.map((item) => <option key={item} value={item}>{item}</option>)}
+            </select>
+          </label>
+          <label className="mt-4 grid gap-1.5 text-sm font-semibold text-field-ink md:mt-0">
+            <span className="canteen-filter-label"><Soup size={16} aria-hidden="true" />食物分类</span>
+            <select
+              value={category}
+              onChange={(event) => updateFilters(region, city, event.target.value)}
+              className="canteen-select field-input min-h-12"
+              disabled={!selectedRegion}
+            >
+              <option value={allFilterValue}>全部分类</option>
+              {selectedRegion?.categories.map((item) => <option key={item} value={item}>{item}</option>)}
+            </select>
+          </label>
+          <Button
+            variant="ghost"
+            className="canteen-reset mt-4 w-full min-h-12 md:mt-0 md:w-auto"
+            onClick={resetFilters}
+            disabled={!selectedRegion}
+          >
+            <RotateCcw size={17} aria-hidden="true" />
+            清空筛选
+          </Button>
+          <div className="canteen-filter-doodle" aria-hidden="true">
+            <div className="canteen-filter-doodle-copy">
+              <span>今日寻味路线</span>
+              <strong>选城 · 挑味 · 开饭</strong>
+            </div>
+            <svg viewBox="0 0 170 72" role="presentation">
+              <path className="canteen-doodle-route" d="M8 56 C30 36, 48 64, 70 44 S112 34, 132 48" />
+              <circle cx="8" cy="56" r="2.8" />
+              <circle cx="132" cy="48" r="2.8" />
+              <path className="canteen-doodle-steam" d="M113 12c-6 6 5 9-1 15M126 9c-7 7 5 10-2 17M139 13c-5 5 4 8-1 13" />
+              <path className="canteen-doodle-bowl" d="M98 32h55c-2 19-12 29-27 29s-25-10-28-29Z" />
+              <path className="canteen-doodle-bowl" d="M104 62h44M149 10l-31 29M157 15l-34 27" />
+              <path className="canteen-doodle-spark" d="m79 13 1.5 4.5L85 19l-4.5 1.5L79 25l-1.5-4.5L73 19l4.5-1.5L79 13Z" />
+            </svg>
+            <span className="canteen-filter-doodle-stamp">10T</span>
+          </div>
+          <div className="canteen-popular-cities mt-4 border-t border-paper-line pt-4 md:col-span-2 lg:col-span-5">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="canteen-popular-label">
+                <Compass size={18} strokeWidth={2.2} aria-hidden="true" />
+                旅游热门城市
+              </span>
+              <span className="text-xs text-field-soft">一键切换地区与城市</span>
+            </div>
+            <div className="mt-2.5 flex flex-wrap gap-2" aria-label="热门旅游城市">
+              {popularCanteenCities.map((item) => {
+                const selected = region === item.region && city === item.city
+                return (
+                  <button
+                    key={item.city}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => updateFilters(item.region, item.city, allFilterValue, [])}
+                    className="canteen-city-chip"
+                  >
+                    {item.city}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+          <fieldset className="mt-4 border-t border-paper-line pt-4 md:col-span-2 lg:col-span-5">
+            <legend className="px-1 text-sm font-semibold text-field-ink">
+              <span className="canteen-filter-label canteen-price-label"><WalletCards size={20} strokeWidth={2.25} aria-hidden="true" />人均价格（可多选）</span>
+            </legend>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {canteenPriceBands.map((band) => {
+                const selected = selectedPriceBands.includes(band.id)
+                return (
+                  <button
+                    key={band.id}
+                    type="button"
+                    aria-pressed={selected}
+                    disabled={!selectedRegion}
+                    onClick={() => togglePriceBand(band.id)}
+                    className={`canteen-price-chip min-h-11 rounded-[10px] border px-3 text-sm font-semibold transition duration-200 motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-45 ${
+                      selected
+                        ? 'border-field-green bg-field-green text-paper-light shadow-field-sm'
+                        : 'border-paper-line bg-field-surface text-field-soft hover:border-field-green/40 hover:text-field-green'
+                    }`}
+                  >
+                    {band.label}
+                  </button>
+                )
+              })}
+            </div>
+          </fieldset>
+        </div>
+
+        <div className="canteen-results-heading mt-8 border-b border-paper-line pb-6">
+          <div>
+            <p className="field-tag">食堂索引</p>
+            <p className="mt-3 font-serif text-2xl font-semibold text-field-ink" aria-live="polite">{resultTitle}</p>
+            <p className="mt-1 text-sm text-field-soft">
+              {selectedRegion ? `${region} · ${city === allFilterValue ? '全部城市' : city} · ${category === allFilterValue ? '全部分类' : category} · ${priceSummary}` : `${canteenImportStats.sourceFileCount} 个地区文件 · ${canteenImportStats.cityCount} 个城市或县级地点`}
+            </p>
+          </div>
+        </div>
+
+        {!selectedRegion ? (
+          <div className="mt-6">
+            <StateBlock type="empty" title="先选一个省份或地区" description={`全量数据已就位，共 ${countFormatter.format(canteenImportStats.recordCount)} 条。选择地区后再按城市和食物分类缩小范围。`} />
+          </div>
+        ) : loadState === 'loading' ? (
+          <div className="mt-6"><StateBlock type="loading" title="正在翻开地区食谱" description={`正在读取${selectedRegion.name}的 ${countFormatter.format(selectedRegion.count)} 条记录。`} /></div>
+        ) : loadState === 'error' ? (
+          <div className="mt-6"><StateBlock type="error" title="这个地区的数据没有加载成功" description="请检查本地开发服务后重试。" action={<Button variant="secondary" onClick={() => setRetryKey((value) => value + 1)}>重新加载</Button>} /></div>
+        ) : filteredPlaces.length ? (
+          <>
+            {ratingSummariesQuery.isError ? (
+              <p className="mt-5 rounded-[10px] border border-brick/25 bg-brick/8 px-3 py-2 text-sm text-brick" role="status">
+                评分服务暂不可用，餐厅浏览和筛选不受影响。
+              </p>
+            ) : null}
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-6">
+              {visiblePlaces.map((place) => (
+                <CanteenCard
+                  key={place.id}
+                  place={place}
+                  picked={place.id === pickedId}
+                  ratingSummary={ratingSummariesQuery.data?.[place.id]}
+                  onRate={() => setRatingPlace(place)}
+                />
+              ))}
+            </div>
+            {visibleCount < filteredPlaces.length ? (
+              <div className="mt-8 flex flex-col items-center gap-2">
+                <p className="text-sm text-field-soft">已显示 {countFormatter.format(visiblePlaces.length)} / {countFormatter.format(filteredPlaces.length)} 条</p>
+                <Button variant="secondary" onClick={() => setVisibleCount((value) => value + pageSize)}>再看 {Math.min(pageSize, filteredPlaces.length - visibleCount)} 家</Button>
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <div className="mt-6">
+            <StateBlock type="empty" title="这个组合还没有记录" description="可以换一个城市、食物分类或人均区间，也可以清空筛选查看该地区的全部记录。" action={<Button variant="secondary" onClick={() => updateFilters(region, allFilterValue, allFilterValue, [])}>查看该地区全部记录</Button>} />
+          </div>
+        )}
+
+        <aside className="mt-8 rounded-[14px] border border-paper-line bg-field-muted/45 p-4 text-sm leading-6 text-field-soft md:flex md:items-center md:justify-between md:gap-5">
+          <p>
+            当前数据来自 {canteenImportStats.sourceFileCount} 个授权 CSV，整理日期 {canteenSnapshotDate}；已去除 {countFormatter.format(canteenImportStats.duplicateCount)} 条重复记录，并剔除 {countFormatter.format(canteenImportStats.excludedRowCount)} 行表头、空行、无明确店名或无食物信息的内容。营业时间、价格和门店状态可能变化，出发前请再次核验。
+          </p>
+          <a href={canteenSourceUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex min-h-11 shrink-0 items-center gap-1.5 font-semibold text-field-green underline decoration-field-green/30 underline-offset-4 hover:decoration-field-green md:mt-0">
+            查看完整巡吃表
+            <ArrowUpRight size={15} aria-hidden="true" />
+          </a>
+        </aside>
+      </div>
+      <button
+        type="button"
+        onClick={handlePick}
+        disabled={loadState !== 'success' || !filteredPlaces.length}
+        className="canteen-random-fab"
+        aria-haspopup="dialog"
+        aria-label="从当前筛选结果中随机选择一家餐厅"
+      >
+        <span className="canteen-random-fab-icon" aria-hidden="true"><Dices size={23} /></span>
+        <span className="canteen-random-fab-copy">
+          <strong>替我<br className="hidden md:block" />选一家</strong>
+          <small>随机开饭签</small>
+        </span>
+      </button>
+      <CanteenPickDialog
+        open={pickDialogOpen}
+        place={pickedPlace}
+        onClose={closePickDialog}
+        onPickAgain={handlePick}
+      />
+      {ratingPlace ? (
+        <CanteenRatingDialog
+          place={ratingPlace}
+          summary={ratingSummariesQuery.data?.[ratingPlace.id]}
+          ownRating={ownRatingQuery.data}
+          ownRatingLoading={ownRatingQuery.isLoading}
+          ownRatingError={ownRatingQuery.error}
+          isConfigured={canteenRatingService.isConfigured}
+          userId={user?.id}
+          returnTo={`${location.pathname}${location.search}`}
+          isSaving={saveRatingMutation.isPending}
+          onClose={closeRatingDialog}
+          onSubmit={submitRating}
+        />
+      ) : null}
+    </section>
+  )
+}

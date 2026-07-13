@@ -18,6 +18,7 @@ const OfficialUpdateDetailPage = lazy(() => import('../../pages/official-updates
 const MomentsPage = lazy(() => import('../../pages/moments/MomentsPage'))
 const GalleryPage = lazy(() => import('../../pages/gallery/GalleryPage'))
 const AgriAidPage = lazy(() => import('../../pages/agri-aid/AgriAidPage'))
+const CanteenPage = lazy(() => import('../../pages/canteen/CanteenPage'))
 const ProfilePage = lazy(() => import('../../pages/profile/ProfilePage'))
 const LoginPage = lazy(() => import('../../pages/login/LoginPage'))
 const RegisterPage = lazy(() => import('../../pages/register/RegisterPage'))
@@ -80,6 +81,7 @@ export function AppRouter() {
             <Route path="moments" element={<MomentsPage />} />
             <Route path="gallery" element={<GalleryPage />} />
             <Route path="agri-aid" element={<AgriAidPage />} />
+            <Route path="canteen" element={<CanteenPage />} />
             <Route path="login" element={<LoginPage />} />
             <Route path="register" element={<RegisterPage />} />
             <Route path="about" element={<AboutPage />} />

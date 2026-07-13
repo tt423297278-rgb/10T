@@ -147,3 +147,47 @@ export interface PointLedgerEntry {
   balanceAfter: number
   createdAt: string
 }
+
+export interface CanteenPlace {
+  id: string
+  region: string
+  city: string
+  district: string
+  category: string
+  categoryDetail?: string
+  name: string
+  address: string
+  price?: string
+  tips?: string
+  note?: string
+  sourceSheet: string
+  sourceUrl: string
+  sourceRow: number
+}
+
+export interface CanteenRatingScores {
+  taste: number
+  service: number
+  value: number
+  environment: number
+}
+
+export interface CanteenRating extends CanteenRatingScores {
+  placeId: string
+  updatedAt: string
+}
+
+export interface CanteenRatingSummary extends CanteenRatingScores {
+  placeId: string
+  ratingCount: number
+  overall: number
+}
+
+export interface CanteenRegionManifest {
+  id: string
+  name: string
+  file: string
+  count: number
+  cities: string[]
+  categories: string[]
+}

@@ -17,6 +17,7 @@
 ## 业务组件
 - 成员：`MemberCard`、`MemberHero`、`TimelineList`、`MemberMediaGrid`。
 - 活动：`EventFilterBar`、`CalendarMonth`、`EventList`、`EventCard`。
+- 食堂：`CanteenFilterBar`、`CanteenCard`、`MealPick`、`CanteenRatingDialog`、`RatingStars`。
 - 签到：`CheckInPanel`、`CheckInCalendar`、`PointLedgerList`、`BadgeShelf`。
 - 社区：`PostCard`、`PostComposerPreview`、`CommentThread`、`InteractionBar`。
 - 动态：`OfficialUpdateCard`、`UpdateFilterBar`。
@@ -25,4 +26,3 @@
 
 ## 状态覆盖
 每个核心列表页面必须有 `loading`、`empty`、`error` 三类状态；所有登录动作必须有未登录状态；后台必须有无权限状态。
-

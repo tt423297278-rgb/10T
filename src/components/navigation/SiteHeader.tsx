@@ -10,6 +10,7 @@ const navItems = [
   { to: '/members', label: '成员' },
   { to: '/events', label: '活动' },
   { to: '/agri-aid', label: '助农' },
+  { to: '/canteen', label: '食堂' },
   { to: '/check-in', label: '签到' },
   { to: '/community', label: '社区' },
   { to: '/moments', label: '名场面' },
@@ -42,7 +43,7 @@ export function SiteHeader() {
 
   return (
     <header
-      className={`sticky top-0 z-40 border-b transition duration-200 ${
+      className={`sticky top-0 z-40 border-b transition duration-200 ${location.pathname === '/canteen' ? 'canteen-site-header' : ''} ${
         solidHeader
           ? 'border-paper-line/80 bg-paper-light/94 shadow-field-sm'
           : 'border-paper-line/40 bg-paper-light/72 text-field-ink'
