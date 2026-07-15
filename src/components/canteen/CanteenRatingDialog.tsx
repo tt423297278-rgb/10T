@@ -1,14 +1,20 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
-import { Star, X } from 'lucide-react'
+import { Camera, ImagePlus, MapPin, ShieldCheck, Star, UtensilsCrossed, X } from 'lucide-react'
 import { Button } from '../common/Button'
 import {
   canteenRatingDimensions,
   emptyCanteenRatingScores,
+  getCanteenOverallRating,
   validateCanteenRatingScores,
   type CanteenRatingDimension,
 } from '../../features/canteen/canteenRatings'
+import {
+  canteenRatingImageAccept,
+  canteenRatingImageLimit,
+  validateCanteenRatingImages,
+} from '../../features/canteen/canteenRatingPhotos'
 import { toCanteenRatingMessage } from '../../services/canteenRatingService'
 import type {
   CanteenPlace,
@@ -61,73 +67,196 @@ export function RatingStars({ value, size = 16, label }: RatingStarsProps) {
   )
 }
 
-function RatingInput({
+export function CanteenScoreInput({
   dimension,
   label,
   value,
   onChange,
+  idPrefix = 'canteen-rating',
 }: {
   dimension: CanteenRatingDimension
   label: string
   value: number
   onChange: (value: number) => void
+  idPrefix?: string
 }) {
+  const inputId = `${idPrefix}-${dimension}`
+  const starSize = 34
+  const starGap = 5
+  const starWidth = starSize * 5 + starGap * 4
+
+  const stars = (filled: boolean) => (
+    <span className="flex" style={{ gap: starGap }} aria-hidden="true">
+      {Array.from({ length: 5 }, (_, index) => (
+        <Star
+          key={index}
+          size={starSize}
+          strokeWidth={1.55}
+          fill={filled ? 'currentColor' : 'none'}
+        />
+      ))}
+    </span>
+  )
+
   return (
-    <label className="grid gap-2 rounded-[12px] border border-paper-line bg-field-muted/35 p-3">
-      <span className="flex items-center justify-between gap-3">
-        <span className="font-semibold text-field-ink">{label}</span>
-        <span className="flex items-center gap-2 text-sm tabular-nums text-field-soft">
-          <RatingStars value={value} />
-          {value ? `${value.toFixed(1)} 星` : '未评分'}
+    <div className="canteen-rating-dimension">
+      <div className="flex items-center justify-between gap-3">
+        <label htmlFor={inputId} className="font-semibold text-field-ink">
+          {label}
+        </label>
+        <output
+          htmlFor={inputId}
+          className="min-w-[4.5rem] text-right text-sm font-semibold tabular-nums text-field-soft"
+        >
+          {value ? `${value.toFixed(1)} 星` : '点亮星星'}
+        </output>
+      </div>
+      <div className="canteen-star-input mt-2" style={{ width: starWidth }}>
+        <span className="absolute inset-0 text-[#b8afa0]">{stars(false)}</span>
+        <span
+          className="absolute inset-y-0 left-0 overflow-hidden text-[#b27832]"
+          style={{ width: `${(Math.max(0, Math.min(5, value)) / 5) * 100}%` }}
+        >
+          <span className="block" style={{ width: starWidth }}>
+            {stars(true)}
+          </span>
         </span>
-      </span>
-      <input
-        type="range"
-        min="0"
-        max="5"
-        step="0.5"
-        value={value}
-        onChange={(event) => onChange(Number(event.target.value))}
-        aria-label={`${label}评分，0.5 星递增`}
-        className="h-11 w-full cursor-pointer accent-field-green touch-manipulation"
-        data-rating-dimension={dimension}
-      />
-      <span className="flex justify-between text-[11px] text-field-soft" aria-hidden="true">
-        <span>未评分</span>
-        <span>2.5</span>
-        <span>5 星</span>
-      </span>
-    </label>
+        <input
+          id={inputId}
+          type="range"
+          min="0"
+          max="5"
+          step="0.5"
+          value={value}
+          onChange={(event) => onChange(Number(event.target.value))}
+          onClick={(event) => {
+            const bounds = event.currentTarget.getBoundingClientRect()
+            const ratio = (event.clientX - bounds.left) / bounds.width
+            const nextValue = Math.max(0.5, Math.min(5, Math.round(ratio * 10) / 2))
+            onChange(nextValue)
+          }}
+          aria-label={`${label}评分，0.5 星递增`}
+          aria-valuetext={value ? `${value.toFixed(1)} 星` : '未评分'}
+          className="absolute inset-0 z-10 h-11 w-full cursor-pointer opacity-0 touch-manipulation"
+          data-rating-dimension={dimension}
+        />
+      </div>
+      <p className="mt-1 text-xs text-field-soft">点击星星评分，可用方向键按半星调整</p>
+    </div>
   )
 }
 
 function RatingSummaryPanel({ summary }: { summary?: CanteenRatingSummary }) {
   if (!summary) {
     return (
-      <div className="rounded-[12px] border border-paper-line bg-field-muted/35 p-4 text-sm text-field-soft">
-        这家店还没有评分，欢迎实际到店后留下第一份评价。
+      <div className="canteen-rating-summary-empty">
+        <div className="grid size-12 shrink-0 place-items-center rounded-full bg-wheat-gold/15 text-wheat-strong">
+          <Star size={24} strokeWidth={1.7} aria-hidden="true" />
+        </div>
+        <div>
+          <strong className="font-serif text-lg text-field-ink">等你留下第一份到店评分</strong>
+          <p className="mt-1 text-sm text-field-soft">四项分数会共同组成这家店的综合评分。</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="rounded-[12px] border border-wheat-gold/35 bg-wheat-gold/10 p-4">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <RatingStars value={summary.overall} size={18} label={`综合评分 ${summary.overall.toFixed(1)} 星`} />
-          <strong className="font-serif text-2xl tabular-nums text-field-ink">{summary.overall.toFixed(1)}</strong>
-        </div>
-        <span className="text-xs text-field-soft">{summary.ratingCount} 人评价</span>
+    <div className="canteen-rating-summary">
+      <div className="canteen-rating-score-seal">
+        <strong>{summary.overall.toFixed(1)}</strong>
+        <span>综合分</span>
       </div>
-      <dl className="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
-        {canteenRatingDimensions.map(({ key, label }) => (
-          <div key={key} className="rounded-[8px] bg-paper-light/65 px-2 py-1.5 text-center">
-            <dt className="text-xs text-field-soft">{label}</dt>
-            <dd className="mt-0.5 font-semibold tabular-nums text-field-ink">{summary[key].toFixed(1)}</dd>
-          </div>
-        ))}
-      </dl>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <RatingStars value={summary.overall} size={20} label={`综合评分 ${summary.overall.toFixed(1)} 星`} />
+          <span className="text-sm text-field-soft">{summary.ratingCount} 人评价</span>
+        </div>
+        <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-4">
+          {canteenRatingDimensions.map(({ key, label }) => (
+            <div key={key} className="flex items-center justify-between gap-2 border-b border-paper-line/70 pb-1 sm:block sm:border-0 sm:pb-0">
+              <dt className="text-field-soft">{label}</dt>
+              <dd className="font-semibold tabular-nums text-field-ink">{summary[key].toFixed(1)}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
     </div>
+  )
+}
+
+interface RatingPhotoDraft {
+  id: string
+  file: File
+  previewUrl: string
+}
+
+function RatingPhotoPicker({
+  drafts,
+  error,
+  onFilesSelected,
+  onRemove,
+}: {
+  drafts: RatingPhotoDraft[]
+  error: string | null
+  onFilesSelected: (files: File[]) => void
+  onRemove: (id: string) => void
+}) {
+  const inputId = useId()
+  const inputRef = useRef<HTMLInputElement>(null)
+  const remaining = canteenRatingImageLimit - drafts.length
+
+  return (
+    <section className="canteen-photo-section" aria-labelledby={`${inputId}-title`}>
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <h3 id={`${inputId}-title`} className="flex items-center gap-2 font-serif text-lg font-semibold text-field-ink">
+            <Camera size={18} strokeWidth={1.8} aria-hidden="true" />
+            晒晒这一餐
+          </h3>
+          <p id={`${inputId}-hint`} className="mt-1 text-sm text-field-soft">最多 4 张，支持 JPG、PNG、WebP、AVIF，单张不超过 10MB。</p>
+        </div>
+        <span className="text-xs font-semibold tabular-nums text-field-soft">{drafts.length}/{canteenRatingImageLimit}</span>
+      </div>
+
+      <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
+        {remaining > 0 ? (
+          <label htmlFor={inputId} className="canteen-photo-add">
+            <ImagePlus size={24} strokeWidth={1.7} aria-hidden="true" />
+            <span>添加图片</span>
+            <small>还可选 {remaining} 张</small>
+          </label>
+        ) : null}
+        <input
+          ref={inputRef}
+          id={inputId}
+          type="file"
+          multiple
+          accept={canteenRatingImageAccept}
+          aria-describedby={`${inputId}-hint`}
+          className="sr-only"
+          onChange={(event) => {
+            onFilesSelected(Array.from(event.target.files ?? []))
+            if (inputRef.current) inputRef.current.value = ''
+          }}
+        />
+        {drafts.map((draft, index) => (
+          <figure key={draft.id} className="canteen-photo-preview">
+            <img src={draft.previewUrl} alt={`已选择的评价图片：${draft.file.name}`} />
+            <figcaption>{index + 1}</figcaption>
+            <button
+              type="button"
+              aria-label={`移除图片 ${draft.file.name}`}
+              onClick={() => onRemove(draft.id)}
+              className="canteen-photo-remove"
+            >
+              <X size={16} aria-hidden="true" />
+            </button>
+          </figure>
+        ))}
+      </div>
+      {error ? <p className="mt-3 text-sm text-brick" role="alert">{error}</p> : null}
+    </section>
   )
 }
 
@@ -142,7 +271,7 @@ interface CanteenRatingDialogProps {
   returnTo: string
   isSaving: boolean
   onClose: () => void
-  onSubmit: (scores: CanteenRatingScores) => Promise<void>
+  onSubmit: (scores: CanteenRatingScores, imageFiles: File[]) => Promise<void>
 }
 
 export function CanteenRatingDialog({
@@ -160,8 +289,11 @@ export function CanteenRatingDialog({
 }: CanteenRatingDialogProps) {
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const dialogRef = useRef<HTMLElement>(null)
+  const previewUrlsRef = useRef(new Set<string>())
   const [scores, setScores] = useState<CanteenRatingScores>(emptyCanteenRatingScores)
   const [visitedConfirmed, setVisitedConfirmed] = useState(false)
+  const [photoDrafts, setPhotoDrafts] = useState<RatingPhotoDraft[]>([])
+  const [photoError, setPhotoError] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   useEffect(() => {
@@ -177,11 +309,17 @@ export function CanteenRatingDialog({
     }
   }, [ownRating, ownRatingLoading, place.id])
 
+  useEffect(() => () => {
+    previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url))
+    previewUrlsRef.current.clear()
+  }, [])
+
   useEffect(() => {
     const previousOverflow = document.body.style.overflow
     const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null
     document.body.style.overflow = 'hidden'
-    closeButtonRef.current?.focus()
+    if (dialogRef.current) dialogRef.current.scrollTop = 0
+    closeButtonRef.current?.focus({ preventScroll: true })
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose()
@@ -215,7 +353,41 @@ export function CanteenRatingDialog({
     setErrorMessage(null)
   }
 
+  const addPhotoDrafts = (files: File[]) => {
+    const validation = validateCanteenRatingImages(files, photoDrafts.length)
+    if (!validation.ok) {
+      setPhotoError(validation.message)
+      return
+    }
+
+    const nextDrafts = files.map((file, index) => {
+      const previewUrl = URL.createObjectURL(file)
+      previewUrlsRef.current.add(previewUrl)
+      return {
+        id: `${file.name}-${file.lastModified}-${index}-${previewUrl}`,
+        file,
+        previewUrl,
+      }
+    })
+    setPhotoDrafts((current) => [...current, ...nextDrafts])
+    setPhotoError(null)
+  }
+
+  const removePhotoDraft = (id: string) => {
+    setPhotoDrafts((current) => {
+      const target = current.find((draft) => draft.id === id)
+      if (target) {
+        URL.revokeObjectURL(target.previewUrl)
+        previewUrlsRef.current.delete(target.previewUrl)
+      }
+      return current.filter((draft) => draft.id !== id)
+    })
+    setPhotoError(null)
+  }
+
   const handleSubmit = async () => {
+    if (!isConfigured) return
+
     if (!validateCanteenRatingScores(scores)) {
       setErrorMessage('请完成口味、服务、性价比和环境四项评分，每项可按 0.5 星调整。')
       return
@@ -227,15 +399,21 @@ export function CanteenRatingDialog({
 
     setErrorMessage(null)
     try {
-      await onSubmit(scores)
+      await onSubmit(scores, photoDrafts.map((draft) => draft.file))
     } catch (error) {
       setErrorMessage(toCanteenRatingMessage(error))
     }
   }
 
+  const canShowRatingEditor = !isConfigured || Boolean(userId && !ownRatingLoading && !ownRatingError)
+  const completedScoreCount = canteenRatingDimensions.filter(({ key }) => scores[key] > 0).length
+  const liveOverallScore = validateCanteenRatingScores(scores)
+    ? getCanteenOverallRating(scores)
+    : null
+
   return createPortal(
     <div
-      className="fixed inset-0 z-50 grid place-items-center bg-field-ink/55 p-4 backdrop-blur-[2px]"
+      className="canteen-rating-backdrop fixed inset-0 z-50 grid place-items-center p-3 sm:p-5"
       role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose()
@@ -246,92 +424,140 @@ export function CanteenRatingDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="canteen-rating-title"
-        className="max-h-[calc(100dvh-2rem)] w-full max-w-xl overflow-y-auto rounded-[18px] border border-paper-line bg-paper-light p-5 shadow-field-md sm:p-6"
+        className="canteen-rating-dialog max-h-[calc(100dvh-1.5rem)] w-full max-w-3xl overflow-y-auto sm:max-h-[calc(100dvh-2.5rem)]"
       >
-        <div className="flex items-start justify-between gap-4">
+        <header className="canteen-rating-header">
           <div className="min-w-0">
-            <p className="field-tag">到店评分</p>
-            <h2 id="canteen-rating-title" className="mt-2 font-serif text-2xl font-semibold text-field-ink">
+            <p className="flex items-center gap-2 text-xs font-bold tracking-[0.16em] text-wheat-strong">
+              <UtensilsCrossed size={15} strokeWidth={1.8} aria-hidden="true" />
+              到店品鉴单
+            </p>
+            <h2 id="canteen-rating-title" className="mt-2 font-serif text-2xl font-semibold text-field-ink sm:text-3xl">
               {place.name}
             </h2>
-            <p className="mt-1 text-sm text-field-soft">{place.city} · {place.district}</p>
+            <p className="mt-1 flex items-center gap-1.5 text-sm text-field-soft">
+              <MapPin size={14} strokeWidth={1.8} aria-hidden="true" />
+              {place.city} · {place.district}
+            </p>
           </div>
           <button
             ref={closeButtonRef}
             type="button"
             aria-label="关闭评分窗口"
             onClick={onClose}
-            className="grid size-11 shrink-0 place-items-center rounded-[10px] text-field-soft transition hover:bg-field-muted hover:text-field-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-field-green"
+            className="grid size-11 shrink-0 place-items-center rounded-full border border-paper-line bg-paper-light/80 text-field-soft transition duration-200 hover:border-wheat-gold/60 hover:text-field-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wheat-gold motion-reduce:transition-none"
           >
             <X size={20} aria-hidden="true" />
           </button>
-        </div>
+        </header>
 
-        <div className="mt-5">
+        <div className="px-4 pb-0 pt-4 sm:px-7 sm:pt-6">
           <RatingSummaryPanel summary={summary} />
-        </div>
 
-        {!isConfigured ? (
-          <div className="mt-5 rounded-[12px] border border-brick/25 bg-brick/8 p-4 text-sm leading-6 text-field-ink" role="status">
-            当前本地环境没有配置 Supabase，暂时只能查看评分界面，不能保存真实评价。
-          </div>
-        ) : !userId ? (
-          <div className="mt-5 rounded-[12px] border border-paper-line bg-field-muted/35 p-4 text-sm leading-6 text-field-ink">
-            <p>评分只开放给登录用户，每个账号对同一家餐厅只保留一份评价。</p>
-            <Button asChild className="mt-4 w-full sm:w-auto">
-              <Link to={`/login?redirect=${encodeURIComponent(returnTo)}`}>登录后评分</Link>
-            </Button>
-          </div>
-        ) : ownRatingLoading ? (
-          <p className="mt-5 rounded-[12px] bg-field-muted/35 p-4 text-sm text-field-soft" role="status">正在读取你的历史评分…</p>
-        ) : ownRatingError ? (
-          <p className="mt-5 rounded-[12px] border border-brick/25 bg-brick/8 p-4 text-sm text-brick" role="alert">
-            {toCanteenRatingMessage(ownRatingError)}
-          </p>
-        ) : (
-          <div className="mt-5">
-            <div className="grid gap-3">
-              {canteenRatingDimensions.map(({ key, label }) => (
-                <RatingInput
-                  key={key}
-                  dimension={key}
-                  label={label}
-                  value={scores[key]}
-                  onChange={(value) => setScore(key, value)}
-                />
-              ))}
+          {!isConfigured ? (
+            <div className="canteen-rating-preview-note mt-4" role="status">
+              <ShieldCheck size={18} strokeWidth={1.8} aria-hidden="true" />
+              <p><strong>本地预览：</strong>评分与图片选择都可体验，但不会保存或上传。</p>
             </div>
-
-            <label className="mt-4 flex min-h-11 cursor-pointer items-start gap-3 rounded-[10px] border border-paper-line bg-field-surface p-3 text-sm leading-6 text-field-ink">
-              <input
-                type="checkbox"
-                checked={visitedConfirmed}
-                onChange={(event) => {
-                  setVisitedConfirmed(event.target.checked)
-                  setErrorMessage(null)
-                }}
-                className="mt-1 size-4 accent-field-green"
-              />
-              <span>我确认自己已经实际到店消费，并按真实体验评分。</span>
-            </label>
-
-            {errorMessage ? (
-              <p className="mt-3 rounded-[10px] border border-brick/25 bg-brick/8 px-3 py-2 text-sm text-brick" role="alert">
-                {errorMessage}
-              </p>
-            ) : null}
-
-            <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <Button variant="ghost" onClick={onClose} disabled={isSaving}>取消</Button>
-              <Button onClick={handleSubmit} isLoading={isSaving}>
-                {ownRating ? '更新我的评分' : '提交评分'}
+          ) : !userId ? (
+            <div className="mt-5 rounded-[14px] border border-paper-line bg-field-muted/35 p-4 text-sm leading-6 text-field-ink">
+              <p>评分只开放给登录用户，每个账号对同一家餐厅只保留一份评价。</p>
+              <Button asChild className="mt-4 w-full sm:w-auto">
+                <Link to={`/login?redirect=${encodeURIComponent(returnTo)}`}>登录后评分</Link>
               </Button>
             </div>
-            <p className="mt-3 text-xs leading-5 text-field-soft">
-              一人一店只保留一份评分；再次提交会更新原评价，不会重复计数。
+          ) : ownRatingLoading ? (
+            <p className="mt-5 rounded-[12px] bg-field-muted/35 p-4 text-sm text-field-soft" role="status">正在读取你的历史评分…</p>
+          ) : ownRatingError ? (
+            <p className="mt-5 rounded-[12px] border border-brick/25 bg-brick/8 p-4 text-sm text-brick" role="alert">
+              {toCanteenRatingMessage(ownRatingError)}
             </p>
-          </div>
-        )}
+          ) : null}
+
+          {canShowRatingEditor ? (
+            <div className="mt-6">
+              <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <h3 className="font-serif text-lg font-semibold text-field-ink">这一餐，感受如何？</h3>
+                  <p className="mt-1 text-sm text-field-soft">每项都需要评分，综合分取四项等权平均。</p>
+                </div>
+                <output
+                  className={`canteen-rating-live-score${liveOverallScore !== null ? ' is-ready' : ''}`}
+                  aria-live="polite"
+                >
+                  <span>{liveOverallScore !== null ? '本次综合评分' : `已完成 ${completedScoreCount}/4`}</span>
+                  {liveOverallScore !== null ? (
+                    <span className="inline-flex items-center gap-2">
+                      <RatingStars
+                        value={liveOverallScore}
+                        size={14}
+                        label={`本次综合评分 ${liveOverallScore.toFixed(1)} 星`}
+                      />
+                      <strong>{liveOverallScore.toFixed(1)}</strong>
+                      <small>/ 5.0</small>
+                    </span>
+                  ) : (
+                    <small>完成四项后自动计算</small>
+                  )}
+                </output>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {canteenRatingDimensions.map(({ key, label }) => (
+                  <CanteenScoreInput
+                    key={key}
+                    dimension={key}
+                    label={label}
+                    value={scores[key]}
+                    onChange={(value) => setScore(key, value)}
+                  />
+                ))}
+              </div>
+
+              <RatingPhotoPicker
+                drafts={photoDrafts}
+                error={photoError}
+                onFilesSelected={addPhotoDrafts}
+                onRemove={removePhotoDraft}
+              />
+
+              <label className="canteen-visited-confirmation">
+                <input
+                  type="checkbox"
+                  checked={visitedConfirmed}
+                  onChange={(event) => {
+                    setVisitedConfirmed(event.target.checked)
+                    setErrorMessage(null)
+                  }}
+                  className="mt-0.5 size-5 shrink-0 accent-field-green"
+                />
+                <span>
+                  <strong className="block text-field-ink">我确认自己已经实际到店消费</strong>
+                  <small className="mt-0.5 block text-field-soft">请根据真实体验评分，并只上传自己拍摄或有权使用的图片。</small>
+                </span>
+              </label>
+
+              {errorMessage ? (
+                <p className="mt-3 rounded-[10px] border border-brick/25 bg-brick/8 px-3 py-2 text-sm text-brick" role="alert">
+                  {errorMessage}
+                </p>
+              ) : null}
+
+              <div className="canteen-rating-actions">
+                <p className="text-xs leading-5 text-field-soft sm:max-w-xs">
+                  {!isConfigured
+                    ? '当前是本地交互预览，不会创建评价或上传图片。'
+                    : '一人一店只保留一份评分；再次提交会更新分数，图片将进入个人评价素材。'}
+                </p>
+                <div className="flex w-full flex-col-reverse gap-2 sm:w-auto sm:flex-row">
+                  <Button variant="ghost" onClick={onClose} disabled={isSaving}>取消</Button>
+                  <Button onClick={handleSubmit} isLoading={isSaving} disabled={!isConfigured}>
+                    {!isConfigured ? '预览模式，无法提交' : ownRating ? '更新我的评价' : '发布到店评价'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </div>
       </section>
     </div>,
     document.body,

@@ -13,9 +13,14 @@ VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
 VITE_APP_NAME=十个勤天陪伴社区
 VITE_APP_URL=http://localhost:5173
+VITE_AMAP_KEY=
+VITE_AMAP_SECURITY_JS_CODE=
+VITE_AMAP_SERVICE_HOST=
 ```
 
 前端只能放 anon key。Service Role Key 只能放 Supabase Edge Functions 或安全服务端环境变量。
+
+高德地图为可选能力：本地开发可填写 Web 端 Key 与安全密钥；生产环境优先配置 `VITE_AMAP_SERVICE_HOST` 指向服务端代理，避免在前端明文暴露安全密钥。地图未配置时，餐厅地址仍可手填或留空。
 
 ## 数据库迁移
 
@@ -25,6 +30,8 @@ VITE_APP_URL=http://localhost:5173
 supabase/migrations/202607010001_initial_schema.sql
 supabase/migrations/202607010002_check_in_rpc.sql
 supabase/migrations/202607130003_canteen_ratings.sql
+supabase/migrations/202607150001_canteen_rating_media.sql
+supabase/migrations/202607150002_canteen_place_submissions.sql
 ```
 
 已包含：
@@ -33,10 +40,11 @@ supabase/migrations/202607130003_canteen_ratings.sql
 - `public.is_admin()` 管理员判断函数。
 - `public.handle_new_user()` 注册后自动创建 profile。
 - 所有业务表启用 RLS。
-- `member-media`、`post-media` 两个 Storage bucket 和基础对象策略。
+- `member-media`、`post-media` 与私有 `canteen-rating-media` Storage bucket 和基础对象策略。
 - `perform_daily_check_in()` RPC，用服务端时间、用户身份、唯一约束和 advisory lock 防止重复签到。
 - `canteen_ratings` 四维评分表、半星校验、到店确认、一人一店唯一约束与 RLS。
 - `get_canteen_rating_summaries()` 聚合 RPC，只公开评分人数和均分，不公开个人评分记录。
+- `canteen_place_submissions` 新餐厅投稿表：登录用户只能创建和读取自己的待审核投稿，管理员负责审核。
 
 ## 食堂评分
 
@@ -44,7 +52,15 @@ supabase/migrations/202607130003_canteen_ratings.sql
 - 匿名用户可调用聚合 RPC 查看综合分和四项均分。
 - 登录用户只能读取、创建和更新自己的评分；唯一约束 `user_id + place_id` 防止重复计数。
 - 前端提交前要求用户确认实际到店；当前是自我声明，不等同于订单或定位核验。
-- 本地未配置 Supabase，或尚未执行 `202607130003_canteen_ratings.sql` 时，评分弹窗会明确提示不可用，不伪造保存成功。
+- 本地未配置 Supabase 时，评分弹窗会提供完整交互预览，但禁用提交且不伪造保存成功；尚未执行 `202607130003_canteen_ratings.sql` 时，真实读取与写入会明确报错。
+- `202607150001_canteen_rating_media.sql` 新增评分图片表与私有 `canteen-rating-media` Storage bucket；每条评价最多保留 4 张图片，单张不超过 10MB。
+
+## 食堂新餐厅投稿
+
+- 餐厅投稿要求登录，并在前端和数据库同时校验名称、地区、城市、分类、四项半星评分和实际到店确认；详细地址为选填。
+- 高德地图按需加载 `AMap.PlaceSearch`，选店后写入地址、经纬度与 POI ID；经纬度必须成对保存。
+- 新投稿固定进入 `reviewing`，普通用户只能读取自己的投稿，不能自行改为通过。
+- 当前公开餐厅目录仍来自授权 CSV 生成的静态 JSON；审核通过后的正式入库/静态数据再生成属于后续后台流程，不在前端直接完成。
 
 ## Auth 行为
 

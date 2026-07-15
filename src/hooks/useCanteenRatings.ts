@@ -21,7 +21,9 @@ export function useOwnCanteenRating(placeId: string | undefined, userId: string 
 export function useSaveCanteenRating(placeId: string | undefined, visiblePlaceIds: string[]) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (scores: CanteenRatingScores) => canteenRatingService.saveRating(placeId ?? '', scores),
+    mutationFn: ({ scores, imageFiles }: { scores: CanteenRatingScores; imageFiles: File[] }) => (
+      canteenRatingService.saveRating(placeId ?? '', scores, imageFiles)
+    ),
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['canteen-rating-summaries', visiblePlaceIds] }),

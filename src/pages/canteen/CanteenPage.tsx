@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react'
 import {
   ArrowUpRight,
   Beef,
@@ -16,18 +16,22 @@ import {
   MapPin,
   MapPinned,
   Pizza,
+  Plus,
   RotateCcw,
   Salad,
   Sandwich,
+  Search,
   Sparkles,
   Soup,
   UtensilsCrossed,
   WalletCards,
+  X,
 } from 'lucide-react'
 import { useLocation, useSearchParams } from 'react-router-dom'
 import { useAppStore } from '../../app/store/useAppStore'
 import { CanteenPickDialog } from '../../components/canteen/CanteenPickDialog'
 import { CanteenRatingDialog, RatingStars } from '../../components/canteen/CanteenRatingDialog'
+import { CanteenRestaurantSubmissionDialog } from '../../components/canteen/CanteenRestaurantSubmissionDialog'
 import { Button } from '../../components/common/Button'
 import { PageMeta } from '../../components/common/PageMeta'
 import { StateBlock } from '../../components/common/StateBlock'
@@ -47,11 +51,14 @@ import {
 } from '../../features/canteen/canteenFilters'
 import { loadCanteenRegion } from '../../services/canteenDataService'
 import { canteenRatingService } from '../../services/canteenRatingService'
+import { canteenSubmissionService } from '../../services/canteenSubmissionService'
 import {
   useCanteenRatingSummaries,
   useOwnCanteenRating,
   useSaveCanteenRating,
 } from '../../hooks/useCanteenRatings'
+import { useCreateCanteenSubmission } from '../../hooks/useCanteenSubmissions'
+import type { CanteenSubmissionDraft } from '../../features/canteen/canteenSubmissions'
 import type { CanteenPlace, CanteenRatingScores, CanteenRatingSummary } from '../../types/domain'
 
 const pageSize = 24
@@ -164,11 +171,11 @@ function CanteenCard({
       <button
         type="button"
         onClick={onRate}
-        className="canteen-rating-button mt-auto flex min-h-11 w-full items-center justify-between gap-2 rounded-[9px] border border-wheat-gold/30 bg-wheat-gold/8 px-2.5 py-2 text-left text-xs font-semibold text-field-ink transition duration-200 hover:border-wheat-gold/55 hover:bg-wheat-gold/14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-field-green motion-reduce:transition-none"
+        className="canteen-rating-button mt-auto flex h-8 w-full items-center justify-between gap-1.5 rounded-[7px] border border-wheat-gold/30 bg-wheat-gold/8 px-2 py-0 text-left text-[11px] font-semibold text-field-ink transition duration-200 hover:border-wheat-gold/55 hover:bg-wheat-gold/14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-field-green motion-reduce:transition-none"
         aria-label={ratingSummary ? `查看或更新${place.name}的评分，当前综合 ${ratingSummary.overall.toFixed(1)} 星` : `为${place.name}评分`}
       >
         <span className="flex min-w-0 items-center gap-1.5">
-          <RatingStars value={ratingSummary?.overall ?? 0} />
+          <RatingStars value={ratingSummary?.overall ?? 0} size={12} />
           <span className="tabular-nums">{ratingSummary ? ratingSummary.overall.toFixed(1) : '暂无'}</span>
         </span>
         <span className="shrink-0 text-field-green">{ratingSummary ? `${ratingSummary.ratingCount} 人` : '去评分'}</span>
@@ -200,6 +207,7 @@ export default function CanteenPage() {
   const [pickedId, setPickedId] = useState<string | null>(null)
   const [pickDialogOpen, setPickDialogOpen] = useState(false)
   const [ratingPlace, setRatingPlace] = useState<CanteenPlace | null>(null)
+  const [submissionDialogOpen, setSubmissionDialogOpen] = useState(false)
 
   const regionParam = searchParams.get('region') ?? allFilterValue
   const selectedRegion = canteenRegions.find((region) => region.name === regionParam)
@@ -208,6 +216,8 @@ export default function CanteenPage() {
   const city = selectedRegion?.cities.includes(cityParam) ? cityParam : allFilterValue
   const categoryParam = searchParams.get('category') ?? allFilterValue
   const category = selectedRegion?.categories.includes(categoryParam) ? categoryParam : allFilterValue
+  const nameQuery = (searchParams.get('q') ?? '').slice(0, 80)
+  const deferredNameQuery = useDeferredValue(nameQuery)
   const selectedPriceBands = useMemo(
     () => searchParams.getAll('price').filter(isCanteenPriceBandId),
     [searchParams],
@@ -242,11 +252,16 @@ export default function CanteenPage() {
     setVisibleCount(pageSize)
     setPickedId(null)
     setPickDialogOpen(false)
-  }, [category, city, priceFilterKey, region])
+  }, [category, city, deferredNameQuery, priceFilterKey, region])
 
   const filteredPlaces = useMemo(
-    () => filterCanteenPlaces(places, { city, category, priceBands: selectedPriceBands }),
-    [category, city, places, selectedPriceBands],
+    () => filterCanteenPlaces(places, {
+      city,
+      category,
+      nameQuery: deferredNameQuery,
+      priceBands: selectedPriceBands,
+    }),
+    [category, city, deferredNameQuery, places, selectedPriceBands],
   )
   const visiblePlaces = useMemo(
     () => filteredPlaces.slice(0, visibleCount),
@@ -259,15 +274,23 @@ export default function CanteenPage() {
   const ratingSummariesQuery = useCanteenRatingSummaries(visiblePlaceIds)
   const ownRatingQuery = useOwnCanteenRating(ratingPlace?.id, user?.id)
   const saveRatingMutation = useSaveCanteenRating(ratingPlace?.id, visiblePlaceIds)
+  const createSubmissionMutation = useCreateCanteenSubmission()
   const pickedPlace = filteredPlaces.find((place) => place.id === pickedId)
 
   const closeRatingDialog = useCallback(() => setRatingPlace(null), [])
   const closePickDialog = useCallback(() => setPickDialogOpen(false), [])
+  const closeSubmissionDialog = useCallback(() => setSubmissionDialogOpen(false), [])
 
-  const submitRating = async (scores: CanteenRatingScores) => {
-    await saveRatingMutation.mutateAsync(scores)
+  const submitRating = async (scores: CanteenRatingScores, imageFiles: File[]) => {
+    await saveRatingMutation.mutateAsync({ scores, imageFiles })
     setToast(ownRatingQuery.data ? '评分已更新' : '评分已提交')
     closeRatingDialog()
+  }
+
+  const submitRestaurant = async (draft: CanteenSubmissionDraft) => {
+    await createSubmissionMutation.mutateAsync(draft)
+    setToast('餐厅推荐已提交，审核通过后会出现在食堂里')
+    closeSubmissionDialog()
   }
 
   const updateFilters = (
@@ -275,16 +298,18 @@ export default function CanteenPage() {
     nextCity: string,
     nextCategory: string,
     nextPriceBands: CanteenPriceBandId[] = selectedPriceBands,
+    nextNameQuery: string = nameQuery,
   ) => {
     const params = new URLSearchParams()
     if (nextRegion !== allFilterValue) params.set('region', nextRegion)
     if (nextCity !== allFilterValue) params.set('city', nextCity)
     if (nextCategory !== allFilterValue) params.set('category', nextCategory)
     nextPriceBands.forEach((priceBand) => params.append('price', priceBand))
+    if (nextNameQuery) params.set('q', nextNameQuery.slice(0, 80))
     setSearchParams(params, { replace: true })
   }
 
-  const resetFilters = () => updateFilters(allFilterValue, allFilterValue, allFilterValue, [])
+  const resetFilters = () => updateFilters(allFilterValue, allFilterValue, allFilterValue, [], '')
 
   const togglePriceBand = (priceBand: CanteenPriceBandId) => {
     const nextPriceBands = selectedPriceBands.includes(priceBand)
@@ -308,12 +333,13 @@ export default function CanteenPage() {
         .map((band) => band.label)
         .join('、')
     : '全部人均'
+  const nameSummary = deferredNameQuery.trim() ? `店名“${deferredNameQuery.trim()}”` : '全部店名'
 
   return (
     <section className="canteen-page py-8 md:py-10">
       <PageMeta
         title="禾伙人食堂"
-        description="按省份、城市、食物分类和人均价格浏览禾伙人共同整理的餐厅记录，并查看真实到店评分。"
+        description="按省份、城市、餐厅名称、食物分类和人均价格浏览禾伙人共同整理的餐厅记录，并查看真实到店评分。"
         path="/canteen"
       />
       <div className="field-container">
@@ -417,6 +443,43 @@ export default function CanteenPage() {
             </svg>
             <span className="canteen-filter-doodle-stamp">10T</span>
           </div>
+          <div className="canteen-name-search mt-4 md:col-span-2 lg:col-span-5">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <label htmlFor="canteen-name-query" className="canteen-filter-label text-sm font-semibold text-field-ink">
+                <Search size={17} strokeWidth={2.1} aria-hidden="true" />
+                餐厅名称
+              </label>
+              <span id="canteen-name-query-help" className="text-xs font-normal text-field-soft">
+                {selectedRegion ? `在${selectedRegion.name}的餐厅中搜索` : '选择省份 / 地区后即可搜索'}
+              </span>
+            </div>
+            <div className="canteen-name-search-control mt-1.5">
+              <Search className="canteen-name-search-icon" size={18} aria-hidden="true" />
+              <input
+                id="canteen-name-query"
+                type="search"
+                value={nameQuery}
+                maxLength={80}
+                autoComplete="off"
+                enterKeyHint="search"
+                disabled={!selectedRegion}
+                aria-describedby="canteen-name-query-help"
+                placeholder={selectedRegion ? '输入店名关键词' : '请先选择省份 / 地区'}
+                onChange={(event) => updateFilters(region, city, category, selectedPriceBands, event.target.value)}
+                className="field-input min-h-12 w-full pl-11 pr-12"
+              />
+              {nameQuery ? (
+                <button
+                  type="button"
+                  className="canteen-name-search-clear"
+                  onClick={() => updateFilters(region, city, category, selectedPriceBands, '')}
+                  aria-label="清空餐厅名称搜索"
+                >
+                  <X size={18} aria-hidden="true" />
+                </button>
+              ) : null}
+            </div>
+          </div>
           <div className="canteen-popular-cities mt-4 border-t border-paper-line pt-4 md:col-span-2 lg:col-span-5">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <span className="canteen-popular-label">
@@ -470,14 +533,24 @@ export default function CanteenPage() {
           </fieldset>
         </div>
 
-        <div className="canteen-results-heading mt-8 border-b border-paper-line pb-6">
+        <div className="canteen-results-heading mt-8 flex flex-col gap-4 border-b border-paper-line pb-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="field-tag">食堂索引</p>
             <p className="mt-3 font-serif text-2xl font-semibold text-field-ink" aria-live="polite">{resultTitle}</p>
             <p className="mt-1 text-sm text-field-soft">
-              {selectedRegion ? `${region} · ${city === allFilterValue ? '全部城市' : city} · ${category === allFilterValue ? '全部分类' : category} · ${priceSummary}` : `${canteenImportStats.sourceFileCount} 个地区文件 · ${canteenImportStats.cityCount} 个城市或县级地点`}
+              {selectedRegion ? `${region} · ${city === allFilterValue ? '全部城市' : city} · ${category === allFilterValue ? '全部分类' : category} · ${priceSummary} · ${nameSummary}` : `${canteenImportStats.sourceFileCount} 个地区文件 · ${canteenImportStats.cityCount} 个城市或县级地点`}
             </p>
           </div>
+          <Button
+            type="button"
+            variant="secondary"
+            className="canteen-submit-entry w-full shrink-0 sm:w-auto"
+            onClick={() => setSubmissionDialogOpen(true)}
+            aria-haspopup="dialog"
+          >
+            <Plus size={18} strokeWidth={2.2} aria-hidden="true" />
+            推荐一家餐厅
+          </Button>
         </div>
 
         {!selectedRegion ? (
@@ -515,7 +588,7 @@ export default function CanteenPage() {
           </>
         ) : (
           <div className="mt-6">
-            <StateBlock type="empty" title="这个组合还没有记录" description="可以换一个城市、食物分类或人均区间，也可以清空筛选查看该地区的全部记录。" action={<Button variant="secondary" onClick={() => updateFilters(region, allFilterValue, allFilterValue, [])}>查看该地区全部记录</Button>} />
+            <StateBlock type="empty" title="没有找到符合条件的餐厅" description="可以换一个店名关键词、城市、食物分类或人均区间，也可以查看该地区的全部记录。" action={<Button variant="secondary" onClick={() => updateFilters(region, allFilterValue, allFilterValue, [], '')}>查看该地区全部记录</Button>} />
           </div>
         )}
 
@@ -562,6 +635,19 @@ export default function CanteenPage() {
           isSaving={saveRatingMutation.isPending}
           onClose={closeRatingDialog}
           onSubmit={submitRating}
+        />
+      ) : null}
+      {submissionDialogOpen ? (
+        <CanteenRestaurantSubmissionDialog
+          regions={canteenRegions}
+          initialRegion={region === allFilterValue ? undefined : region}
+          initialCity={city === allFilterValue ? undefined : city}
+          isConfigured={canteenSubmissionService.isConfigured}
+          userId={user?.id}
+          returnTo={`${location.pathname}${location.search}`}
+          isSaving={createSubmissionMutation.isPending}
+          onClose={closeSubmissionDialog}
+          onSubmit={submitRestaurant}
         />
       ) : null}
     </section>
