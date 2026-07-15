@@ -49,6 +49,7 @@ import {
   pickCanteenPlace,
   type CanteenPriceBandId,
 } from '../../features/canteen/canteenFilters'
+import { getCanteenCover } from '../../features/canteen/canteenCovers'
 import { loadCanteenRegion } from '../../services/canteenDataService'
 import { canteenRatingService } from '../../services/canteenRatingService'
 import { canteenSubmissionService } from '../../services/canteenSubmissionService'
@@ -75,17 +76,6 @@ const popularCanteenCities = [
   { city: '南京', region: '江苏' },
   { city: '厦门', region: '福建' },
 ] as const
-
-type CanteenFlavorTone = 'classic' | 'fresh' | 'smoke' | 'spicy' | 'staple' | 'sweet'
-
-function getCanteenFlavorTone(category: string): CanteenFlavorTone {
-  if (/(火锅|串串|川菜|湘菜|辣)/.test(category)) return 'spicy'
-  if (/(甜|蛋糕|饮品|奶茶|咖啡|冰)/.test(category)) return 'sweet'
-  if (/(素|轻食|水果|海鲜|鱼)/.test(category)) return 'fresh'
-  if (/(面|粉|米|饺|包|早餐|小吃)/.test(category)) return 'staple'
-  if (/(烤|肉|牛|羊|卤)/.test(category)) return 'smoke'
-  return 'classic'
-}
 
 function CanteenCategoryIcon({ category }: { category: string }) {
   let Icon = UtensilsCrossed
@@ -118,27 +108,41 @@ function CanteenCard({
   ratingSummary?: CanteenRatingSummary
   onRate: () => void
 }) {
-  const flavorTone = getCanteenFlavorTone(place.category)
+  const cover = getCanteenCover([place.category, place.categoryDetail, place.name].filter(Boolean).join(' '))
 
   return (
     <article
       id={`canteen-place-${place.id}`}
-      data-flavor={flavorTone}
-      className={`canteen-place-card relative flex h-full min-w-0 flex-col rounded-[12px] border bg-field-surface/92 p-3 shadow-field-sm transition duration-300 ease-field motion-reduce:transition-none ${
+      data-flavor={cover.tone}
+      className={`canteen-place-card relative flex h-full min-w-0 flex-col overflow-hidden rounded-[12px] border bg-field-surface/92 p-3 shadow-field-sm transition duration-300 ease-field motion-reduce:transition-none ${
         picked
           ? 'border-wheat-gold ring-2 ring-wheat-gold/35'
           : 'border-paper-line hover:-translate-y-0.5 hover:border-field-green/30 hover:shadow-field-md motion-reduce:hover:translate-y-0'
       }`}
     >
       {picked ? (
-        <span className="absolute right-2.5 top-2.5 rotate-[-7deg] rounded-[6px] border-2 border-wheat-gold bg-paper-light px-2 py-0.5 font-serif text-[11px] font-bold text-soil-brown">
+        <span className="absolute right-2.5 top-2.5 z-30 rotate-[-7deg] rounded-[6px] border-2 border-wheat-gold bg-paper-light px-2 py-0.5 font-serif text-[11px] font-bold text-soil-brown shadow-field-sm">
           开饭签
         </span>
       ) : null}
-      <div className="canteen-card-mast" aria-hidden="true">
-        <span><CanteenCategoryIcon category={place.category} /></span>
-      </div>
-      <div className={`flex flex-wrap items-center gap-1.5 ${picked ? 'pr-14' : ''}`}>
+      <figure className="canteen-card-cover -mx-3 -mt-3 mb-3">
+        <img
+          src={cover.src}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          width="960"
+          height="600"
+        />
+        <span className="canteen-card-mast" aria-hidden="true">
+          <CanteenCategoryIcon category={place.category} />
+        </span>
+        <span className="canteen-card-cover-badge">品类示意 · {cover.label}</span>
+        <figcaption className="sr-only">
+          {cover.label}品类示意图，并非{place.name}的门店实拍
+        </figcaption>
+      </figure>
+      <div className="flex flex-wrap items-center gap-1.5">
         <span className="field-tag max-w-full truncate px-1.5 py-0.5 text-[11px]" title={`${place.city} · ${place.district}`}>
           {place.city} · {place.district}
         </span>

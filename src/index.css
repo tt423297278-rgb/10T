@@ -3505,23 +3505,69 @@ a {
 }
 
 .canteen-card-mast {
+  position: absolute;
+  bottom: 0.65rem;
+  left: 0.65rem;
+  z-index: 2;
   display: grid;
   place-items: center;
-  width: 2rem;
-  height: 2rem;
-  margin: -0.1rem 0 0.65rem;
+  width: 2.2rem;
+  height: 2.2rem;
   padding: 0;
   border: 1px solid var(--flavor-accent);
   border-radius: 50%;
   color: var(--canteen-clay);
-  background: #f8eddd;
+  background: rgb(255 249 239 / 0.94);
+  box-shadow: 0 5px 14px rgb(42 27 17 / 0.22);
+  backdrop-filter: blur(7px);
 }
 
-.canteen-card-mast span {
-  display: grid;
-  place-items: center;
+.canteen-card-cover {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  aspect-ratio: 8 / 5;
+  border-bottom: 1px solid color-mix(in srgb, var(--flavor-accent) 42%, transparent);
+  background: #eadfcd;
+}
+
+.canteen-card-cover::after {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  content: '';
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, transparent 52%, rgb(40 24 14 / 0.58)),
+    linear-gradient(120deg, rgb(85 46 24 / 0.06), transparent 50%);
+}
+
+.canteen-card-cover img {
   width: 100%;
   height: 100%;
+  object-fit: cover;
+  transition: transform 480ms var(--ease-field);
+}
+
+.canteen-card-cover-badge {
+  position: absolute;
+  right: 0.65rem;
+  bottom: 0.72rem;
+  z-index: 2;
+  max-width: calc(100% - 4rem);
+  overflow: hidden;
+  padding: 0.28rem 0.48rem;
+  border: 1px solid rgb(255 242 217 / 0.38);
+  border-radius: 999px;
+  color: #fffaf0;
+  background: rgb(52 31 18 / 0.6);
+  box-shadow: 0 4px 12px rgb(35 20 12 / 0.14);
+  font-size: 0.64rem;
+  font-weight: 700;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  backdrop-filter: blur(7px);
 }
 
 .canteen-place-card[data-flavor='spicy'] {
@@ -3542,6 +3588,10 @@ a {
 
 .canteen-place-card[data-flavor='smoke'] {
   --flavor-accent: #b88a6b;
+}
+
+.canteen-place-card[data-flavor='western'] {
+  --flavor-accent: #c79561;
 }
 
 .canteen-place-card::before {
@@ -4636,6 +4686,10 @@ a {
     inset 0 1px rgb(255 255 255 / 0.82);
 }
 
+.canteen-place-card:hover .canteen-card-cover img {
+  transform: scale(1.025);
+}
+
 @media (max-width: 639px) {
   .canteen-page {
     padding-top: 1.15rem;
@@ -4738,6 +4792,7 @@ a {
 
 @media (prefers-reduced-motion: reduce) {
   .canteen-hero-media img,
+  .canteen-card-cover img,
   .canteen-place-card:hover {
     transform: none;
     transition: none;
