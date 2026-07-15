@@ -16,6 +16,7 @@ export type CanteenPriceBandId = (typeof canteenPriceBands)[number]['id']
 export interface CanteenFilters {
   city: string
   category: string
+  nameQuery?: string
   priceBands?: CanteenPriceBandId[]
 }
 
@@ -75,10 +76,20 @@ export function getCanteenCategories(
   return uniqueSorted(cityPlaces.map((place) => place.category))
 }
 
+export function normalizeCanteenNameQuery(value: string) {
+  return value
+    .normalize('NFKC')
+    .trim()
+    .toLocaleLowerCase('zh-CN')
+    .replace(/\s+/g, '')
+}
+
 export function filterCanteenPlaces(
   places: CanteenPlace[],
   filters: CanteenFilters,
 ) {
+  const normalizedNameQuery = normalizeCanteenNameQuery(filters.nameQuery ?? '')
+
   return places.filter((place) => {
     const matchesCity =
       filters.city === allFilterValue || place.city === filters.city
@@ -86,7 +97,9 @@ export function filterCanteenPlaces(
       filters.category === allFilterValue || place.category === filters.category
     const matchesPrice =
       !filters.priceBands?.length || filters.priceBands.includes(getCanteenPriceBandId(place.price))
-    return matchesCity && matchesCategory && matchesPrice
+    const matchesName =
+      !normalizedNameQuery || normalizeCanteenNameQuery(place.name).includes(normalizedNameQuery)
+    return matchesCity && matchesCategory && matchesPrice && matchesName
   })
 }
 

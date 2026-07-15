@@ -129,6 +129,23 @@
 - 权限：用户只可读写自己的评分；公开页面通过安全聚合 RPC 读取餐厅人数与各项均分，不返回 `user_id`。
 - 到店边界：当前采用用户自我确认，不宣称已通过订单、定位或管理员人工核验。
 
+## CanteenRatingMedia
+- 用途：保存用户随到店评价提交的餐厅图片；当前不直接公开展示，后续公开前需接入内容审核。
+- 主键：`id uuid`；通过 `rating_id` 关联 `CanteenRating`，通过 `user_id` 校验素材所有者。
+- 字段：`storage_path`, `alt`, `mime_type`, `size_bytes`, `position`, `created_at`。
+- 限制：每条评价最多 4 张；支持 JPEG、PNG、WebP、AVIF，单张不超过 10MB。
+- 存储：私有 `canteen-rating-media` bucket，路径按 `user_id/rating_id` 隔离。
+- 权限：用户只能读取、创建和删除自己的评价图片记录与 Storage 对象。
+
+## CanteenPlaceSubmission
+- 用途：接收登录用户推荐的新餐厅，避免未经核验的数据直接混入授权巡吃表生成的公开目录。
+- 主键：`id uuid`；提交者字段为 `submitter_id`。
+- 必填字段：`name`, `region`, `city`, `category`, 四项 `0.5–5.0` 半星评分、`visited_confirmed`。
+- 选填字段：`district`, `address`, `price`, `note`, `longitude`, `latitude`, `amap_poi_id`；经纬度必须同时存在或同时为空。
+- 审核字段：`status`, `reviewed_by`, `reviewed_at`, `review_note`；新投稿固定为 `reviewing`。
+- 权限：登录用户只能创建并读取自己的投稿，不能自行修改审核状态；管理员可读取和审核。
+- 发布边界：投稿审核通过后仍需由受信任的导入或后台流程生成正式餐厅记录；当前不会在前端直接写入静态 JSON。
+
 ## AdminLog
 - 主键：`id uuid`。
 - 字段：`admin_id`, `action`, `target_type`, `target_id`, `before`, `after`, `created_at`。

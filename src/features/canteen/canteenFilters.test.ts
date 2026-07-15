@@ -8,6 +8,7 @@ import {
   getCanteenPriceEstimate,
   getCanteenCategories,
   getCanteenCities,
+  normalizeCanteenNameQuery,
   pickCanteenPlace,
 } from './canteenFilters'
 
@@ -86,6 +87,35 @@ describe('canteen filters', () => {
         priceBands: ['under-30', 'unknown'],
       }).map((place) => place.id),
     ).toEqual(['sh-hotpot', 'bj-noodles'])
+  })
+
+  it('matches partial restaurant names after normalizing case and spaces', () => {
+    expect(normalizeCanteenNameQuery('  Bei Jing 火 锅  ')).toBe('beijing火锅')
+    expect(
+      filterCanteenPlaces(places, {
+        city: allFilterValue,
+        category: allFilterValue,
+        nameQuery: ' 京 火 锅 ',
+      }).map((place) => place.id),
+    ).toEqual(['bj-hotpot'])
+  })
+
+  it('combines restaurant name search with the other filters', () => {
+    expect(
+      filterCanteenPlaces(places, {
+        city: '北京',
+        category: '面食',
+        nameQuery: '面馆',
+        priceBands: ['unknown'],
+      }).map((place) => place.id),
+    ).toEqual(['bj-noodles'])
+    expect(
+      filterCanteenPlaces(places, {
+        city: '上海',
+        category: allFilterValue,
+        nameQuery: '面馆',
+      }),
+    ).toHaveLength(0)
   })
 
   it('picks from the filtered list without going out of bounds', () => {

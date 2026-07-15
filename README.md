@@ -41,6 +41,9 @@ VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
 VITE_APP_NAME=
 VITE_APP_URL=
+VITE_AMAP_KEY=
+VITE_AMAP_SECURITY_JS_CODE=
+VITE_AMAP_SERVICE_HOST=
 ```
 
 不要把 Supabase Service Role Key、数据库管理员密码、第三方私钥或管理后台密钥放进前端环境变量。
@@ -66,6 +69,7 @@ supabase/migrations/202607010002_check_in_rpc.sql
 - 麦粒值：所有变动写入 `point_ledger`，前端不能直接修改积分总数。
 - 个人中心：读取资料、发布、评论、收藏、关注、徽章、通知和麦粒值明细。
 - 后台管理：读取审核计数、帖子/评论/举报队列，并提供基础审核状态操作。
+- 食堂共建：登录用户可提交包含名称、城市、分类和四项到店评分的新餐厅推荐；详细地址可留空或通过高德地图选取，内容先进入审核队列，不直接公开。
 
 社区媒体上传限制：
 
