@@ -21,6 +21,7 @@
 | 成员动态封面 | `public/images/news/iqiyi-zdb-first-photo.webp` | approved | https://www.iqiyi.com/kszt/1gr1a168fhq.html | 十个勤天复刻首张合影相关缩略图 |
 | 社区精选封面 | `public/images/news/iqiyi-zdb-wheat-vlog.webp` | approved | https://www.iqiyi.com/kszt/1gr1a168fhq.html | 小麦丰收 vlog 相关缩略图 |
 | 成员 01-10 个人介绍照片 | `public/images/members/member-01.webp` 至 `member-10.webp` | approved | 详见 `src/data/imageSources.ts` | 十位成员各自独立照片，统一压缩为 WebP 和 4:5 比例 |
+| 食堂卡片品类封面（7 张） | `public/images/canteen/covers/canteen-cover-*.webp` | generated | OpenAI ImageGen，本项目生成 | 家常、鲜蔬海味、烧烤、火锅、主食、甜品和西式简餐的通用品类示意图；不是具体餐厅实拍，页面必须保留“品类示意”标识 |
 
 完整来源台账见 `src/data/imageSources.ts`。
 
