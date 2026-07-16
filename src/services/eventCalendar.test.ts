@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildEventIcs, formatIcsDate } from './eventCalendar'
+import { buildEventIcs, formatIcsAllDayDate, formatIcsDate } from './eventCalendar'
 import type { FanEvent } from '../types/domain'
 
 const event: FanEvent = {
@@ -30,5 +30,22 @@ describe('event calendar helpers', () => {
     expect(ics).toContain('DTSTART:20260706T120000Z')
     expect(ics).toContain('DTEND:20260706T133000Z')
     expect(ics).toContain('DESCRIPTION:活动说明\\n参与成员：成员一\\n信息来源：本地模拟数据')
+  })
+
+  it('builds an all-day ICS document when the exact time is not published', () => {
+    const ics = buildEventIcs(
+      {
+        ...event,
+        startsAt: '2026-08-01T00:00:00+08:00',
+        endsAt: '2026-08-01T23:59:59+08:00',
+        timeTbd: true,
+      },
+      ['成员一'],
+    )
+
+    expect(formatIcsAllDayDate('2026-08-01T23:59:59+08:00', 1)).toBe('20260802')
+    expect(ics).toContain('DTSTART;VALUE=DATE:20260801')
+    expect(ics).toContain('DTEND;VALUE=DATE:20260802')
+    expect(ics).not.toContain('DTSTART:20260731T160000Z')
   })
 })

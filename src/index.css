@@ -1,9 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif+SC:wght@500;600;700&display=swap');
 @import 'tailwindcss';
 
 @theme {
-  --font-sans: 'PingFang SC', 'Source Han Sans SC', 'Noto Sans SC', Inter, system-ui, sans-serif;
-  --font-serif: 'Noto Serif SC', 'Songti SC', serif;
+  --font-sans: 'PingFang SC', 'Microsoft YaHei', 'Source Han Sans SC', 'Noto Sans SC', system-ui, sans-serif;
+  --font-serif: 'Songti SC', STSong, SimSun, 'Noto Serif SC', serif;
   --font-mono: 'JetBrains Mono', 'SFMono-Regular', ui-monospace, monospace;
   --color-field-green: #244d38;
   --color-forest-green: #30524a;
@@ -15,15 +14,15 @@
   --color-paper-light: #f8f5ea;
   --color-sky-blue: #c8d6d2;
   --color-charcoal: #2b2d29;
-  --color-muted-text: #73766d;
+  --color-muted-text: #62665d;
   --color-border-color: rgb(43 45 41 / 0.14);
   --color-field-bg: #f4efe3;
   --color-field-surface: #f8f5ea;
   --color-field-muted: #e7decc;
   --color-field-ink: #2b2d29;
-  --color-field-soft: #73766d;
+  --color-field-soft: #62665d;
   --color-wheat: #d6b167;
-  --color-wheat-strong: #9a762e;
+  --color-wheat-strong: #7d5d1e;
   --color-olive: #244d38;
   --color-sky-wash: #c8d6d2;
   --color-brick: #9d4e3b;
@@ -45,7 +44,7 @@
   --soil-brown: #765a3b;
   --ink-dark: #2b2d29;
   --mist-blue: #c8d6d2;
-  --muted-text: #73766d;
+  --muted-text: #62665d;
   --border-soft: rgb(43 45 41 / 0.14);
   color: var(--color-field-ink);
   background: var(--color-field-bg);
@@ -113,7 +112,7 @@ body {
 body::before {
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  z-index: 2;
   pointer-events: none;
   content: '';
   opacity: 0.04;
@@ -127,7 +126,7 @@ body::before {
 body::after {
   position: fixed;
   inset: 0;
-  z-index: 9998;
+  z-index: 1;
   pointer-events: none;
   content: '';
   opacity: 0.038;
@@ -1487,7 +1486,6 @@ a {
   font-size: 0.78rem;
   font-weight: 650;
   letter-spacing: 0.02em;
-  animation: field-drift 7s var(--ease-standard) infinite;
 }
 
 .poster-hero {
@@ -1955,6 +1953,7 @@ a {
 }
 
 .agri-board-filter-button {
+  min-height: 2.75rem;
   flex: 0 0 auto;
   padding: 0.58rem 0.86rem;
   font-size: 0.9rem;
@@ -4427,6 +4426,74 @@ a {
   }
 }
 
+@media (max-width: 639px) {
+  .canteen-rating-header {
+    gap: 0.65rem;
+    padding: 0.7rem 0.85rem;
+  }
+
+  .canteen-rating-header h2 {
+    margin-top: 0.25rem;
+    font-size: 1.25rem;
+    line-height: 1.2;
+  }
+
+  .canteen-rating-header p:last-child {
+    margin-top: 0.2rem;
+    font-size: 0.75rem;
+    line-height: 1.3;
+  }
+
+  .canteen-rating-summary-empty,
+  .canteen-rating-summary {
+    gap: 0.7rem;
+    padding: 0.75rem;
+  }
+
+  .canteen-rating-preview-note {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.75rem;
+    line-height: 1.45;
+  }
+
+  .canteen-rating-dimension {
+    padding: 0.7rem 0.8rem;
+  }
+
+  .canteen-photo-section {
+    margin-top: 1rem;
+    padding-top: 0.9rem;
+  }
+
+  .canteen-visited-confirmation {
+    min-height: 3.5rem;
+    margin-top: 1rem;
+    padding: 0.75rem 0.8rem;
+  }
+
+  .canteen-rating-actions,
+  .canteen-submit-actions {
+    gap: 0.55rem;
+    padding: 0.7rem 0.85rem;
+  }
+
+  .canteen-rating-actions > div:last-child,
+  .canteen-submit-actions > div:last-child {
+    display: grid;
+    grid-template-columns: 0.8fr 1.2fr;
+    gap: 0.5rem;
+  }
+
+  .canteen-rating-actions button,
+  .canteen-rating-actions a,
+  .canteen-submit-actions button,
+  .canteen-submit-actions a {
+    min-height: 2.75rem;
+    padding-inline: 0.7rem;
+    font-size: 0.78rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .canteen-rating-dimension,
   .canteen-photo-add,
@@ -4759,30 +4826,30 @@ a {
 @media (max-width: 767px) {
   .canteen-random-fab {
     top: auto;
-    right: auto;
+    right: 0.75rem;
     bottom: calc(5.5rem + env(safe-area-inset-bottom));
-    left: 50%;
+    left: auto;
     flex-direction: row;
     gap: 0.65rem;
     width: auto;
-    min-width: 10.75rem;
-    min-height: 3.75rem;
-    padding: 0.45rem 1rem 0.45rem 0.55rem;
-    transform: translateX(-50%);
+    width: 3.25rem;
+    min-width: 3.25rem;
+    min-height: 3.25rem;
+    padding: 0.35rem;
+    transform: none;
   }
 
   .canteen-random-fab:hover:not(:disabled) {
-    transform: translateX(-50%) translateY(-2px);
+    transform: translateY(-2px);
   }
 
   .canteen-random-fab-icon {
-    width: 2.65rem;
-    height: 2.65rem;
+    width: 2.4rem;
+    height: 2.4rem;
   }
 
   .canteen-random-fab-copy {
-    gap: 0.1rem;
-    text-align: left;
+    display: none;
   }
 
   .canteen-random-fab-copy strong {

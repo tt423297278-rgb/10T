@@ -3,7 +3,13 @@
   <url><loc>http://localhost:5173/</loc></url>
   <url><loc>http://localhost:5173/members</loc></url>
   <url><loc>http://localhost:5173/events</loc></url>
+  <url><loc>http://localhost:5173/agri-aid</loc></url>
+  <url><loc>http://localhost:5173/canteen</loc></url>
   <url><loc>http://localhost:5173/check-in</loc></url>
   <url><loc>http://localhost:5173/community</loc></url>
+  <url><loc>http://localhost:5173/moments</loc></url>
+  <url><loc>http://localhost:5173/gallery</loc></url>
   <url><loc>http://localhost:5173/updates</loc></url>
+  <url><loc>http://localhost:5173/about</loc></url>
+  <url><loc>http://localhost:5173/rules</loc></url>
 </urlset>

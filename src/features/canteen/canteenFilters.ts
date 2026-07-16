@@ -1,4 +1,4 @@
-import type { CanteenPlace } from '../../types/domain'
+import type { CanteenPlace, CanteenRatingSummary } from '../../types/domain'
 
 export const allFilterValue = 'all'
 
@@ -11,17 +11,29 @@ export const canteenPriceBands = [
   { id: 'unknown', label: '价格不详' },
 ] as const
 
+export const canteenSortOptions = [
+  { id: 'default', label: '默认顺序' },
+  { id: 'rating', label: '评分最高' },
+  { id: 'count', label: '评价最多' },
+] as const
+
 export type CanteenPriceBandId = (typeof canteenPriceBands)[number]['id']
+export type CanteenSortId = (typeof canteenSortOptions)[number]['id']
 
 export interface CanteenFilters {
   city: string
   category: string
   nameQuery?: string
   priceBands?: CanteenPriceBandId[]
+  includeClosed?: boolean
 }
 
 export function isCanteenPriceBandId(value: string): value is CanteenPriceBandId {
   return canteenPriceBands.some((band) => band.id === value)
+}
+
+export function isCanteenSortId(value: string): value is CanteenSortId {
+  return canteenSortOptions.some((option) => option.id === value)
 }
 
 export function getCanteenPriceEstimate(price?: string) {
@@ -91,6 +103,7 @@ export function filterCanteenPlaces(
   const normalizedNameQuery = normalizeCanteenNameQuery(filters.nameQuery ?? '')
 
   return places.filter((place) => {
+    const matchesStatus = filters.includeClosed || place.status !== 'closed'
     const matchesCity =
       filters.city === allFilterValue || place.city === filters.city
     const matchesCategory =
@@ -99,8 +112,37 @@ export function filterCanteenPlaces(
       !filters.priceBands?.length || filters.priceBands.includes(getCanteenPriceBandId(place.price))
     const matchesName =
       !normalizedNameQuery || normalizeCanteenNameQuery(place.name).includes(normalizedNameQuery)
-    return matchesCity && matchesCategory && matchesPrice && matchesName
+    return matchesStatus && matchesCity && matchesCategory && matchesPrice && matchesName
   })
+}
+
+export function sortCanteenPlaces(
+  places: CanteenPlace[],
+  summaries: Record<string, CanteenRatingSummary> | undefined,
+  sort: CanteenSortId,
+) {
+  if (sort === 'default') return places
+
+  return places
+    .map((place, index) => ({ place, index, summary: summaries?.[place.id] }))
+    .sort((left, right) => {
+      const leftHasRatings = Boolean(left.summary?.ratingCount)
+      const rightHasRatings = Boolean(right.summary?.ratingCount)
+
+      if (leftHasRatings !== rightHasRatings) return leftHasRatings ? -1 : 1
+      if (!leftHasRatings || !rightHasRatings) return left.index - right.index
+
+      const primaryDifference = sort === 'rating'
+        ? right.summary!.overall - left.summary!.overall
+        : right.summary!.ratingCount - left.summary!.ratingCount
+      if (primaryDifference) return primaryDifference
+
+      const secondaryDifference = sort === 'rating'
+        ? right.summary!.ratingCount - left.summary!.ratingCount
+        : right.summary!.overall - left.summary!.overall
+      return secondaryDifference || left.index - right.index
+    })
+    .map(({ place }) => place)
 }
 
 export function pickCanteenPlace(places: CanteenPlace[], random = Math.random) {

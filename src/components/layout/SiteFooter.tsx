@@ -11,10 +11,10 @@ export function SiteFooter() {
             非官方粉丝社区原型，聚焦公开信息整理、陪伴记录和克制友好的互动。
           </p>
         </div>
-        <nav aria-label="页脚链接" className="grid gap-2 text-sm text-field-soft">
-          <Link to="/about">网站说明</Link>
-          <Link to="/rules">社区规则</Link>
-          <Link to="/updates">成员动态</Link>
+        <nav aria-label="页脚链接" className="grid gap-1 text-sm text-field-soft">
+          <Link className="flex min-h-11 items-center" to="/about">网站说明</Link>
+          <Link className="flex min-h-11 items-center" to="/rules">社区规则</Link>
+          <Link className="flex min-h-11 items-center" to="/updates">成员动态</Link>
         </nav>
         <div className="text-sm text-field-soft">
           <p>内容来源需保留来源字段；未经授权不搬运图片、视频或第三方完整内容。</p>

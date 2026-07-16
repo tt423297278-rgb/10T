@@ -8,8 +8,10 @@ import {
   getCanteenPriceEstimate,
   getCanteenCategories,
   getCanteenCities,
+  isCanteenSortId,
   normalizeCanteenNameQuery,
   pickCanteenPlace,
+  sortCanteenPlaces,
 } from './canteenFilters'
 
 const places: CanteenPlace[] = [
@@ -50,6 +52,7 @@ const places: CanteenPlace[] = [
     sourceSheet: '北京篇',
     sourceUrl: 'https://example.com/bj',
     sourceRow: 4,
+    status: 'closed',
   },
 ]
 
@@ -85,6 +88,7 @@ describe('canteen filters', () => {
         city: allFilterValue,
         category: allFilterValue,
         priceBands: ['under-30', 'unknown'],
+        includeClosed: true,
       }).map((place) => place.id),
     ).toEqual(['sh-hotpot', 'bj-noodles'])
   })
@@ -108,6 +112,15 @@ describe('canteen filters', () => {
         nameQuery: '面馆',
         priceBands: ['unknown'],
       }).map((place) => place.id),
+    ).toEqual([])
+    expect(
+      filterCanteenPlaces(places, {
+        city: '北京',
+        category: '面食',
+        nameQuery: '面馆',
+        priceBands: ['unknown'],
+        includeClosed: true,
+      }).map((place) => place.id),
     ).toEqual(['bj-noodles'])
     expect(
       filterCanteenPlaces(places, {
@@ -116,6 +129,59 @@ describe('canteen filters', () => {
         nameQuery: '面馆',
       }),
     ).toHaveLength(0)
+  })
+
+  it('hides closed restaurants unless the user explicitly includes them', () => {
+    expect(
+      filterCanteenPlaces(places, {
+        city: allFilterValue,
+        category: allFilterValue,
+      }).map((place) => place.id),
+    ).toEqual(['sh-hotpot', 'bj-hotpot'])
+    expect(
+      filterCanteenPlaces(places, {
+        city: allFilterValue,
+        category: allFilterValue,
+        includeClosed: true,
+      }),
+    ).toHaveLength(3)
+  })
+
+  it('sorts rated restaurants before unrated restaurants with stable tie breakers', () => {
+    const summaries = {
+      'sh-hotpot': {
+        placeId: 'sh-hotpot',
+        ratingCount: 3,
+        taste: 4.5,
+        service: 4,
+        value: 4,
+        environment: 4,
+        overall: 4.2,
+      },
+      'bj-hotpot': {
+        placeId: 'bj-hotpot',
+        ratingCount: 8,
+        taste: 4,
+        service: 4,
+        value: 4,
+        environment: 4,
+        overall: 4,
+      },
+    }
+
+    expect(sortCanteenPlaces(places, summaries, 'rating').map((place) => place.id)).toEqual([
+      'sh-hotpot',
+      'bj-hotpot',
+      'bj-noodles',
+    ])
+    expect(sortCanteenPlaces(places, summaries, 'count').map((place) => place.id)).toEqual([
+      'bj-hotpot',
+      'sh-hotpot',
+      'bj-noodles',
+    ])
+    expect(sortCanteenPlaces(places, {}, 'rating')).toEqual(places)
+    expect(isCanteenSortId('rating')).toBe(true)
+    expect(isCanteenSortId('unknown')).toBe(false)
   })
 
   it('picks from the filtered list without going out of bounds', () => {

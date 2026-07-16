@@ -114,7 +114,7 @@ export function FieldJournalHero() {
             <div className="absolute inset-x-4 bottom-4 flex items-center justify-between gap-3">
               <button
                 type="button"
-                className="interactive-press inline-flex size-10 items-center justify-center rounded-full border border-paper-light/55 bg-field-ink/46 text-paper-light backdrop-blur-sm transition hover:bg-field-green"
+                className="interactive-press inline-flex size-11 items-center justify-center rounded-full border border-paper-light/55 bg-field-ink/46 text-paper-light backdrop-blur-sm transition hover:bg-field-green"
                 aria-label="上一张群像图"
                 onClick={() => goToSlide(activeIndex - 1)}
               >
@@ -125,16 +125,18 @@ export function FieldJournalHero() {
                   <button
                     key={image.sourceId}
                     type="button"
-                    className={`size-2.5 rounded-full transition ${index === activeIndex ? 'bg-paper-light' : 'bg-paper-light/42 hover:bg-paper-light/70'}`}
+                    className="group interactive-press grid size-11 place-items-center rounded-full"
                     aria-label={`切换到第 ${index + 1} 张群像图`}
                     aria-current={index === activeIndex ? 'true' : undefined}
                     onClick={() => goToSlide(index)}
-                  />
+                  >
+                    <span className={`size-2.5 rounded-full transition ${index === activeIndex ? 'bg-paper-light' : 'bg-paper-light/42 group-hover:bg-paper-light/70'}`} aria-hidden="true" />
+                  </button>
                 ))}
               </div>
               <button
                 type="button"
-                className="interactive-press inline-flex size-10 items-center justify-center rounded-full border border-paper-light/55 bg-field-ink/46 text-paper-light backdrop-blur-sm transition hover:bg-field-green"
+                className="interactive-press inline-flex size-11 items-center justify-center rounded-full border border-paper-light/55 bg-field-ink/46 text-paper-light backdrop-blur-sm transition hover:bg-field-green"
                 aria-label="下一张群像图"
                 onClick={() => goToSlide(activeIndex + 1)}
               >

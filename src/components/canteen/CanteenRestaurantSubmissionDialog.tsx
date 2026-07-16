@@ -21,7 +21,7 @@ import {
   type CanteenSubmissionDraft,
   type CanteenSubmissionField,
 } from '../../features/canteen/canteenSubmissions'
-import { canteenRatingDimensions, emptyCanteenRatingScores } from '../../features/canteen/canteenRatings'
+import { canteenRatingDimensions, emptyCanteenRatingScores, getCanteenOverallRating } from '../../features/canteen/canteenRatings'
 import { toCanteenSubmissionMessage } from '../../services/canteenSubmissionService'
 import type { CanteenRatingDimension } from '../../features/canteen/canteenRatings'
 import type { AmapPoiSelection } from '../../services/amapService'
@@ -98,6 +98,10 @@ export function CanteenRestaurantSubmissionDialog({
     () => Array.from(new Set(regions.flatMap((region) => region.categories))).sort((a, b) => a.localeCompare(b, 'zh-CN')),
     [regions],
   )
+  const completedScoreCount = canteenRatingDimensions.filter(({ key }) => draft.scores[key] > 0).length
+  const liveOverallScore = completedScoreCount === canteenRatingDimensions.length
+    ? getCanteenOverallRating(draft.scores)
+    : null
   const amapSelection = useMemo<AmapPoiSelection | undefined>(() => {
     if (!Number.isFinite(draft.longitude) || !Number.isFinite(draft.latitude)) return undefined
     return {
@@ -454,12 +458,25 @@ export function CanteenRestaurantSubmissionDialog({
             </section>
 
             <section className="mt-8 border-t border-paper-line pt-7" aria-labelledby="canteen-submit-rating-title">
-              <div className="canteen-submit-section-heading">
-                <span>02</span>
-                <div>
-                  <h3 id="canteen-submit-rating-title">先留下你的到店评分 <RequiredMark /></h3>
-                  <p>四项都要评分，支持半星；这份评分随餐厅资料一起审核。</p>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="canteen-submit-section-heading">
+                  <span>02</span>
+                  <div>
+                    <h3 id="canteen-submit-rating-title">先留下你的到店评分 <RequiredMark /></h3>
+                    <p>四项都要评分，支持半星；这份评分随餐厅资料一起审核。</p>
+                  </div>
                 </div>
+                <output className={`canteen-rating-live-score${liveOverallScore !== null ? ' is-ready' : ''}`} aria-live="polite">
+                  <span>{liveOverallScore !== null ? '本次综合评分' : `已完成 ${completedScoreCount}/4`}</span>
+                  {liveOverallScore !== null ? (
+                    <span className="inline-flex items-baseline gap-1">
+                      <strong>{liveOverallScore.toFixed(1)}</strong>
+                      <small>/ 5.0</small>
+                    </span>
+                  ) : (
+                    <small>完成四项后自动计算</small>
+                  )}
+                </output>
               </div>
               <div className="mt-4 grid gap-3 sm:grid-cols-2" aria-invalid={Boolean(errors.scores)} aria-describedby={errors.scores ? 'canteen-submit-scores-error' : undefined}>
                 {canteenRatingDimensions.map(({ key, label }) => (

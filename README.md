@@ -30,7 +30,18 @@ pnpm typecheck
 pnpm test
 pnpm lint
 pnpm build
+pnpm data:sanitize:canteen
 ```
+
+更新巡吃数据后运行 `pnpm data:sanitize:canteen`，会统一隐藏自由文本中的联系方式，并标记可明确识别的停业或搬迁记录。
+
+正式部署前生成与线上域名一致的 sitemap（示例）：
+
+```bash
+pnpm seo:sitemap -- --base=https://example.com
+```
+
+生成后请提交 `public/sitemap.xml` 和 `public/robots.txt`；不要把 `localhost` 版本部署到公网。
 
 ## 环境变量
 

@@ -3,6 +3,7 @@ import { CalendarDays, Clock3, MapPin, UsersRound } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { EventStatus, EventType, FanEvent, Member } from '../../types/domain'
 import { filterEvents } from '../../features/events/eventFilters'
+import { formatEventStartLabel } from '../../features/events/eventTime'
 import { PageMeta } from '../../components/common/PageMeta'
 import { SectionHeader } from '../../components/common/SectionHeader'
 import { StateBlock } from '../../components/common/StateBlock'
@@ -41,6 +42,7 @@ function getEventShortTitle(event: FanEvent) {
   if (event.title.includes('Ready To The Top')) return '鹭卓上海站'
   if (event.title.includes('Threshold')) return '李耕耘生日会'
   if (event.title.includes('哦啦音乐节')) return '哦啦音乐节'
+  if (event.title.includes('银河左岸')) return '贵阳音乐节'
   if (event.title.includes('数到一')) return '李昊香港'
   const tourCity = event.title.match(/巡回演唱会\s*(\S+站)/)?.[1]
   if (tourCity) return `巡演${tourCity.replace('站', '')}`
@@ -112,7 +114,7 @@ function EventListItem({ event, members }: { event: FanEvent; members: Member[] 
       <div className="mt-3 grid gap-1.5 text-xs text-field-soft">
         <span className="record-meta">
           <Clock3 size={14} aria-hidden="true" />
-          {new Date(event.startsAt).toLocaleString('zh-CN', { dateStyle: 'medium', timeStyle: 'short' })}
+          {formatEventStartLabel(event, 'medium')}
         </span>
         <span className="record-meta">
           <MapPin size={14} aria-hidden="true" />
