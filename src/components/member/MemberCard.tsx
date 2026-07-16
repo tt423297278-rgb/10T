@@ -34,7 +34,7 @@ export function MemberCard({
           <div className="flex items-center justify-between gap-2">
             <p className="field-tag">档案 NO. {order}</p>
             <button
-              className="interactive-press flex min-h-8 min-w-8 items-center justify-center rounded-[9px] text-field-soft transition hover:bg-sprout-green/12 hover:text-field-green"
+              className="interactive-press flex min-h-11 min-w-11 items-center justify-center rounded-[9px] text-field-soft transition hover:bg-sprout-green/12 hover:text-field-green"
               aria-label={`收藏 ${member.name}`}
             >
               <Bookmark size={15} aria-hidden="true" />
@@ -45,7 +45,7 @@ export function MemberCard({
             <p className="truncate text-xs font-semibold text-soil-brown">{member.shortTag}</p>
             <Link
               to={`/members/${member.id}`}
-              className="interactive-press inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-field-green"
+              className="interactive-press inline-flex min-h-11 shrink-0 items-center gap-1 px-1 text-xs font-semibold text-field-green"
             >
               详情 <ArrowRight size={14} aria-hidden="true" />
             </Link>
@@ -91,7 +91,7 @@ export function MemberCard({
           <button
             className={cn(
               'interactive-press flex items-center justify-center rounded-[10px] text-field-soft transition hover:bg-sprout-green/12 hover:text-field-green',
-              compact ? 'min-h-9 min-w-9' : 'min-h-11 min-w-11',
+              'min-h-11 min-w-11',
             )}
             aria-label={`收藏 ${member.name}`}
           >
@@ -108,7 +108,7 @@ export function MemberCard({
         </div>
         <div className={cn('mt-auto flex items-center justify-between gap-2', compact ? 'pt-3' : 'gap-3 pt-5')}>
           <p className="member-card-status text-xs text-field-soft">{member.recentStatus}</p>
-          <Button asChild variant="ghost" className={compact ? 'min-h-9 px-1.5 text-xs' : 'px-2'}>
+          <Button asChild variant="ghost" className={compact ? 'min-h-11 px-1.5 text-xs' : 'px-2'}>
             <Link to={`/members/${member.id}`}>
               详情 <ArrowRight size={16} aria-hidden="true" />
             </Link>

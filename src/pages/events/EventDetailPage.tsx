@@ -7,6 +7,7 @@ import { PageMeta } from '../../components/common/PageMeta'
 import { StateBlock } from '../../components/common/StateBlock'
 import { StatusBadge } from '../../components/common/StatusBadge'
 import { authService } from '../../features/auth/authService'
+import { formatEventEndLabel, formatEventStartLabel } from '../../features/events/eventTime'
 import { useEventsQuery, useMembersQuery } from '../../hooks/usePublicData'
 import { buildEventIcs, downloadTextFile } from '../../services/eventCalendar'
 import { eventActions } from '../../services/eventActions'
@@ -31,7 +32,7 @@ export default function EventDetailPage() {
   const memberNames = eventMembers.map((member) => member.name)
   const eventText = [
     event.title,
-    `时间：${new Date(event.startsAt).toLocaleString('zh-CN', { dateStyle: 'full', timeStyle: 'short' })}`,
+    `时间：${formatEventStartLabel(event)}`,
     `地点：${event.platform} · ${event.location}`,
     `成员：${memberNames.join('、') || '待确认'}`,
     `状态：${event.status}`,
@@ -107,8 +108,8 @@ export default function EventDetailPage() {
           <h1 className="mt-4 font-serif text-4xl font-semibold text-field-ink">{event.title}</h1>
           <p className="mt-4 text-field-soft">{event.description}</p>
           <dl className="mt-6 grid gap-3 text-sm sm:grid-cols-2">
-            <div><dt className="text-field-soft">开始时间</dt><dd>{new Date(event.startsAt).toLocaleString('zh-CN', { dateStyle: 'full', timeStyle: 'short' })}</dd></div>
-            <div><dt className="text-field-soft">结束时间</dt><dd>{event.endsAt ? new Date(event.endsAt).toLocaleString('zh-CN', { timeStyle: 'short' }) : '待确认'}</dd></div>
+            <div><dt className="text-field-soft">开始时间</dt><dd>{formatEventStartLabel(event)}</dd></div>
+            <div><dt className="text-field-soft">结束时间</dt><dd>{formatEventEndLabel(event)}</dd></div>
             <div><dt className="text-field-soft">地点</dt><dd>{event.location}</dd></div>
             <div><dt className="text-field-soft">平台</dt><dd>{event.platform}</dd></div>
             <div>

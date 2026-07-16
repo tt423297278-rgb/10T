@@ -9,6 +9,8 @@ export const canteenImportStats = {
   "recordCount": 16599,
   "duplicateCount": 362,
   "excludedRowCount": 4627,
+  "privacyRedactionCount": 58,
+  "closedRecordCount": 104,
   "cityCount": 511,
   "categoryCount": 16
 } as const

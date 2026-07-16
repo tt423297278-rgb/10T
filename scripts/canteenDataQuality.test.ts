@@ -39,4 +39,19 @@ describe('generated canteen data quality', () => {
 
     expect(invalidRecords).toEqual([])
   })
+
+  it('does not publish direct contact details from free-text recommendations', async () => {
+    const records = await loadGeneratedRecords()
+    const directContactPattern = /(?<!\d)1[3-9]\d{9}(?!\d)|(?:微信|微\s*信|vx|v信|wx|qq|q群)\s*(?:号|[:：])?\s*[a-z0-9_-]{4,}|(?:加我|联系我|私聊我|找我)(?:的)?(?:微信|微\s*信|vx|v信|wx|qq|q群)?/i
+    const exposedRecords = records.filter((record) => directContactPattern.test(`${record.note ?? ''} ${record.tips ?? ''}`))
+
+    expect(exposedRecords).toEqual([])
+  })
+
+  it('marks explicit closure records so they can be hidden by default', async () => {
+    const records = await loadGeneratedRecords()
+    const closedRecords = records.filter((record) => record.status === 'closed')
+
+    expect(closedRecords).toHaveLength(canteenImportStats.closedRecordCount)
+  })
 })

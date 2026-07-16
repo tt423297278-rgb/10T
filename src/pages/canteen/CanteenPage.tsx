@@ -1,5 +1,6 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react'
 import {
+  ArrowDownWideNarrow,
   ArrowUpRight,
   Beef,
   Beer,
@@ -7,6 +8,7 @@ import {
   Compass,
   CookingPot,
   Croissant,
+  CircleOff,
   CupSoda,
   Dices,
   Fish,
@@ -44,10 +46,14 @@ import {
 import {
   allFilterValue,
   canteenPriceBands,
+  canteenSortOptions,
   filterCanteenPlaces,
   isCanteenPriceBandId,
+  isCanteenSortId,
   pickCanteenPlace,
+  sortCanteenPlaces,
   type CanteenPriceBandId,
+  type CanteenSortId,
 } from '../../features/canteen/canteenFilters'
 import { getCanteenCover } from '../../features/canteen/canteenCovers'
 import { loadCanteenRegion } from '../../services/canteenDataService'
@@ -62,7 +68,6 @@ import { useCreateCanteenSubmission } from '../../hooks/useCanteenSubmissions'
 import type { CanteenSubmissionDraft } from '../../features/canteen/canteenSubmissions'
 import type { CanteenPlace, CanteenRatingScores, CanteenRatingSummary } from '../../types/domain'
 
-const pageSize = 24
 const countFormatter = new Intl.NumberFormat('zh-CN')
 const popularCanteenCities = [
   { city: '北京', region: '北京' },
@@ -149,8 +154,14 @@ function CanteenCard({
         <span className="max-w-full truncate rounded-[6px] border border-wheat-gold/35 bg-wheat-gold/10 px-1.5 py-0.5 text-[11px] font-semibold text-soil-brown" title={place.category}>
           {place.category}
         </span>
+        {place.status === 'closed' ? (
+          <span className="inline-flex items-center gap-1 rounded-[6px] border border-brick/30 bg-brick/8 px-1.5 py-0.5 text-[11px] font-semibold text-brick">
+            <CircleOff size={12} aria-hidden="true" />
+            已停业 / 搬迁
+          </span>
+        ) : null}
       </div>
-      <h2 className="mt-3 line-clamp-2 font-serif text-lg font-semibold leading-snug text-field-ink" title={place.name}>{place.name}</h2>
+      <h3 className="mt-2.5 min-h-12 line-clamp-2 font-sans text-[15px] font-bold leading-6 tracking-[0.01em] text-field-ink" title={place.name}>{place.name}</h3>
       {place.categoryDetail ? (
         <p className="mt-1 line-clamp-1 text-[11px] leading-4 text-field-soft" title={`原表菜系：${place.categoryDetail}`}>原表菜系：{place.categoryDetail}</p>
       ) : null}
@@ -175,14 +186,14 @@ function CanteenCard({
       <button
         type="button"
         onClick={onRate}
-        className="canteen-rating-button mt-auto flex h-8 w-full items-center justify-between gap-1.5 rounded-[7px] border border-wheat-gold/30 bg-wheat-gold/8 px-2 py-0 text-left text-[11px] font-semibold text-field-ink transition duration-200 hover:border-wheat-gold/55 hover:bg-wheat-gold/14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-field-green motion-reduce:transition-none"
+        className="canteen-rating-button mt-auto flex min-h-11 w-full items-center justify-between gap-1 rounded-[7px] border border-wheat-gold/30 bg-wheat-gold/8 px-1.5 py-1 text-left text-[10px] font-semibold text-field-ink transition duration-200 hover:border-wheat-gold/55 hover:bg-wheat-gold/14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-field-green motion-reduce:transition-none"
         aria-label={ratingSummary ? `查看或更新${place.name}的评分，当前综合 ${ratingSummary.overall.toFixed(1)} 星` : `为${place.name}评分`}
       >
-        <span className="flex min-w-0 items-center gap-1.5">
-          <RatingStars value={ratingSummary?.overall ?? 0} size={12} />
-          <span className="tabular-nums">{ratingSummary ? ratingSummary.overall.toFixed(1) : '暂无'}</span>
+        <span className="flex min-w-0 items-center gap-1">
+          <RatingStars value={ratingSummary?.overall ?? 0} size={11} />
+          <span className="shrink-0 whitespace-nowrap tabular-nums">{ratingSummary ? ratingSummary.overall.toFixed(1) : '暂无'}</span>
         </span>
-        <span className="shrink-0 text-field-green">{ratingSummary ? `${ratingSummary.ratingCount} 人` : '去评分'}</span>
+        <span className="shrink-0 whitespace-nowrap text-field-green">{ratingSummary ? `${ratingSummary.ratingCount} 人` : '去评分'}</span>
       </button>
       <div className="mt-2 border-t border-paper-line pt-2.5 text-[11px] text-field-soft">
         <a
@@ -204,6 +215,7 @@ export default function CanteenPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const user = useAppStore((state) => state.user)
   const setToast = useAppStore((state) => state.setToast)
+  const [pageSize] = useState(() => window.matchMedia('(max-width: 767px)').matches ? 12 : 24)
   const [places, setPlaces] = useState<CanteenPlace[]>([])
   const [loadState, setLoadState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [retryKey, setRetryKey] = useState(0)
@@ -221,6 +233,9 @@ export default function CanteenPage() {
   const categoryParam = searchParams.get('category') ?? allFilterValue
   const category = selectedRegion?.categories.includes(categoryParam) ? categoryParam : allFilterValue
   const nameQuery = (searchParams.get('q') ?? '').slice(0, 80)
+  const includeClosed = searchParams.get('closed') === 'include'
+  const sortParam = searchParams.get('sort') ?? 'default'
+  const sort = isCanteenSortId(sortParam) ? sortParam : 'default'
   const deferredNameQuery = useDeferredValue(nameQuery)
   const selectedPriceBands = useMemo(
     () => searchParams.getAll('price').filter(isCanteenPriceBandId),
@@ -256,7 +271,7 @@ export default function CanteenPage() {
     setVisibleCount(pageSize)
     setPickedId(null)
     setPickDialogOpen(false)
-  }, [category, city, deferredNameQuery, priceFilterKey, region])
+  }, [category, city, deferredNameQuery, includeClosed, pageSize, priceFilterKey, region, sort])
 
   const filteredPlaces = useMemo(
     () => filterCanteenPlaces(places, {
@@ -264,22 +279,31 @@ export default function CanteenPage() {
       category,
       nameQuery: deferredNameQuery,
       priceBands: selectedPriceBands,
+      includeClosed,
     }),
-    [category, city, deferredNameQuery, places, selectedPriceBands],
+    [category, city, deferredNameQuery, includeClosed, places, selectedPriceBands],
+  )
+  const closedPlacesCount = useMemo(
+    () => places.filter((place) => place.status === 'closed').length,
+    [places],
+  )
+  const ratingPlaceIds = useMemo(
+    () => places.map((place) => place.id),
+    [places],
+  )
+  const ratingSummariesQuery = useCanteenRatingSummaries(ratingPlaceIds)
+  const sortedPlaces = useMemo(
+    () => sortCanteenPlaces(filteredPlaces, ratingSummariesQuery.data, sort),
+    [filteredPlaces, ratingSummariesQuery.data, sort],
   )
   const visiblePlaces = useMemo(
-    () => filteredPlaces.slice(0, visibleCount),
-    [filteredPlaces, visibleCount],
+    () => sortedPlaces.slice(0, visibleCount),
+    [sortedPlaces, visibleCount],
   )
-  const visiblePlaceIds = useMemo(
-    () => visiblePlaces.map((place) => place.id),
-    [visiblePlaces],
-  )
-  const ratingSummariesQuery = useCanteenRatingSummaries(visiblePlaceIds)
   const ownRatingQuery = useOwnCanteenRating(ratingPlace?.id, user?.id)
-  const saveRatingMutation = useSaveCanteenRating(ratingPlace?.id, visiblePlaceIds)
+  const saveRatingMutation = useSaveCanteenRating(ratingPlace?.id)
   const createSubmissionMutation = useCreateCanteenSubmission()
-  const pickedPlace = filteredPlaces.find((place) => place.id === pickedId)
+  const pickedPlace = sortedPlaces.find((place) => place.id === pickedId)
 
   const closeRatingDialog = useCallback(() => setRatingPlace(null), [])
   const closePickDialog = useCallback(() => setPickDialogOpen(false), [])
@@ -303,6 +327,8 @@ export default function CanteenPage() {
     nextCategory: string,
     nextPriceBands: CanteenPriceBandId[] = selectedPriceBands,
     nextNameQuery: string = nameQuery,
+    nextIncludeClosed: boolean = includeClosed,
+    nextSort: CanteenSortId = sort,
   ) => {
     const params = new URLSearchParams()
     if (nextRegion !== allFilterValue) params.set('region', nextRegion)
@@ -310,10 +336,12 @@ export default function CanteenPage() {
     if (nextCategory !== allFilterValue) params.set('category', nextCategory)
     nextPriceBands.forEach((priceBand) => params.append('price', priceBand))
     if (nextNameQuery) params.set('q', nextNameQuery.slice(0, 80))
+    if (nextIncludeClosed) params.set('closed', 'include')
+    if (nextSort !== 'default') params.set('sort', nextSort)
     setSearchParams(params, { replace: true })
   }
 
-  const resetFilters = () => updateFilters(allFilterValue, allFilterValue, allFilterValue, [], '')
+  const resetFilters = () => updateFilters(allFilterValue, allFilterValue, allFilterValue, [], '', false, 'default')
 
   const togglePriceBand = (priceBand: CanteenPriceBandId) => {
     const nextPriceBands = selectedPriceBands.includes(priceBand)
@@ -338,6 +366,8 @@ export default function CanteenPage() {
         .join('、')
     : '全部人均'
   const nameSummary = deferredNameQuery.trim() ? `店名“${deferredNameQuery.trim()}”` : '全部店名'
+  const statusSummary = includeClosed ? '含已停业记录' : '仅显示可到店记录'
+  const sortSummary = canteenSortOptions.find((option) => option.id === sort)?.label ?? '默认顺序'
 
   return (
     <section className="canteen-page py-8 md:py-10">
@@ -447,7 +477,7 @@ export default function CanteenPage() {
             </svg>
             <span className="canteen-filter-doodle-stamp">10T</span>
           </div>
-          <div className="canteen-name-search mt-4 md:col-span-2 lg:col-span-5">
+          <div className="canteen-name-search mt-4 md:col-span-2 lg:col-span-4">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <label htmlFor="canteen-name-query" className="canteen-filter-label text-sm font-semibold text-field-ink">
                 <Search size={17} strokeWidth={2.1} aria-hidden="true" />
@@ -484,6 +514,34 @@ export default function CanteenPage() {
               ) : null}
             </div>
           </div>
+          <label className="mt-4 grid gap-1.5 text-sm font-semibold text-field-ink md:col-span-2 lg:col-span-1">
+            <span className="canteen-filter-label">
+              <ArrowDownWideNarrow size={17} strokeWidth={2.1} aria-hidden="true" />
+              评价排序
+            </span>
+            <select
+              value={sort}
+              disabled={!selectedRegion}
+              aria-describedby="canteen-sort-help"
+              onChange={(event) => updateFilters(
+                region,
+                city,
+                category,
+                selectedPriceBands,
+                nameQuery,
+                includeClosed,
+                event.target.value as CanteenSortId,
+              )}
+              className="canteen-select field-input min-h-12"
+            >
+              {canteenSortOptions.map((option) => (
+                <option key={option.id} value={option.id}>{option.label}</option>
+              ))}
+            </select>
+            <span id="canteen-sort-help" className="text-[11px] font-normal leading-4 text-field-soft">
+              暂无评分时保持原表顺序
+            </span>
+          </label>
           <div className="canteen-popular-cities mt-4 border-t border-paper-line pt-4 md:col-span-2 lg:col-span-5">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <span className="canteen-popular-label">
@@ -533,6 +591,21 @@ export default function CanteenPage() {
                   </button>
                 )
               })}
+              {closedPlacesCount ? (
+                <button
+                  type="button"
+                  aria-pressed={includeClosed}
+                  disabled={!selectedRegion}
+                  onClick={() => updateFilters(region, city, category, selectedPriceBands, nameQuery, !includeClosed)}
+                  className={`min-h-11 rounded-[10px] border px-3 text-sm font-semibold transition duration-200 motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-45 ${
+                    includeClosed
+                      ? 'border-brick/55 bg-brick/10 text-brick'
+                      : 'border-paper-line bg-field-surface text-field-soft hover:border-brick/35 hover:text-brick'
+                  }`}
+                >
+                  {includeClosed ? '已包含' : '包含'} {closedPlacesCount} 家已停业 / 搬迁
+                </button>
+              ) : null}
             </div>
           </fieldset>
         </div>
@@ -540,9 +613,9 @@ export default function CanteenPage() {
         <div className="canteen-results-heading mt-8 flex flex-col gap-4 border-b border-paper-line pb-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="field-tag">食堂索引</p>
-            <p className="mt-3 font-serif text-2xl font-semibold text-field-ink" aria-live="polite">{resultTitle}</p>
+            <h2 className="mt-3 font-serif text-2xl font-semibold text-field-ink" aria-live="polite">{resultTitle}</h2>
             <p className="mt-1 text-sm text-field-soft">
-              {selectedRegion ? `${region} · ${city === allFilterValue ? '全部城市' : city} · ${category === allFilterValue ? '全部分类' : category} · ${priceSummary} · ${nameSummary}` : `${canteenImportStats.sourceFileCount} 个地区文件 · ${canteenImportStats.cityCount} 个城市或县级地点`}
+              {selectedRegion ? `${region} · ${city === allFilterValue ? '全部城市' : city} · ${category === allFilterValue ? '全部分类' : category} · ${priceSummary} · ${nameSummary} · ${statusSummary} · ${sortSummary}` : `${canteenImportStats.sourceFileCount} 个地区文件 · ${canteenImportStats.cityCount} 个城市或县级地点`}
             </p>
           </div>
           <Button
@@ -572,7 +645,7 @@ export default function CanteenPage() {
                 评分服务暂不可用，餐厅浏览和筛选不受影响。
               </p>
             ) : null}
-            <div className="mt-6 grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-6">
+            <div className="mt-6 grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
               {visiblePlaces.map((place) => (
                 <CanteenCard
                   key={place.id}
@@ -598,7 +671,7 @@ export default function CanteenPage() {
 
         <aside className="mt-8 rounded-[14px] border border-paper-line bg-field-muted/45 p-4 text-sm leading-6 text-field-soft md:flex md:items-center md:justify-between md:gap-5">
           <p>
-            当前数据来自 {canteenImportStats.sourceFileCount} 个授权 CSV，整理日期 {canteenSnapshotDate}；已去除 {countFormatter.format(canteenImportStats.duplicateCount)} 条重复记录，并剔除 {countFormatter.format(canteenImportStats.excludedRowCount)} 行表头、空行、无明确店名或无食物信息的内容。营业时间、价格和门店状态可能变化，出发前请再次核验。
+            当前数据来自 {canteenImportStats.sourceFileCount} 个授权 CSV，整理日期 {canteenSnapshotDate}；已去除 {countFormatter.format(canteenImportStats.duplicateCount)} 条重复记录，剔除 {countFormatter.format(canteenImportStats.excludedRowCount)} 行无效内容，隐藏 {countFormatter.format(canteenImportStats.privacyRedactionCount)} 条自由文本联系方式，并默认收起 {countFormatter.format(canteenImportStats.closedRecordCount)} 条明确停业或搬迁记录。营业时间、价格和门店状态仍可能变化，出发前请再次核验。
           </p>
           <a href={canteenSourceUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex min-h-11 shrink-0 items-center gap-1.5 font-semibold text-field-green underline decoration-field-green/30 underline-offset-4 hover:decoration-field-green md:mt-0">
             查看完整巡吃表

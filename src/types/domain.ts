@@ -87,6 +87,7 @@ export interface FanEvent {
   status: EventStatus
   startsAt: string
   endsAt?: string
+  timeTbd?: boolean
   location: string
   platform: string
   memberIds: string[]
@@ -160,6 +161,7 @@ export interface CanteenPlace {
   price?: string
   tips?: string
   note?: string
+  status?: 'closed'
   sourceSheet: string
   sourceUrl: string
   sourceRow: number

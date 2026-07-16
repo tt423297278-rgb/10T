@@ -9,7 +9,9 @@
     "test": "vitest run",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "data:sanitize:canteen": "node scripts/sanitizeCanteenData.mjs",
+    "seo:sitemap": "node scripts/generateSitemap.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",

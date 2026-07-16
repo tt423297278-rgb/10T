@@ -1,6 +1,5 @@
-import { CheckCircle2 } from 'lucide-react'
+import { ArrowUpRight, CheckCircle2, MapPin } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { AgriAidTimelineSection } from '../../components/agri-aid/AgriAidTimelineSection'
 import { Button } from '../../components/common/Button'
 import { PageMeta } from '../../components/common/PageMeta'
 import { SectionHeader } from '../../components/common/SectionHeader'
@@ -11,6 +10,7 @@ import { MemberCard } from '../../components/member/MemberCard'
 import { FadeIn } from '../../components/motion/FadeIn'
 import { PostCard } from '../../components/community/PostCard'
 import { communityPosts } from '../../data/community'
+import { homeAidHighlights } from '../../data/homeAidHighlights'
 import { useEventsQuery, useMembersQuery, useOfficialUpdatesQuery } from '../../hooks/usePublicData'
 
 export default function HomePage() {
@@ -56,7 +56,38 @@ export default function HomePage() {
       </FadeIn>
 
       <FadeIn>
-        <AgriAidTimelineSection />
+        <section className="field-section py-10">
+          <div className="field-container">
+            <SectionHeader
+              eyebrow="助农行动档案"
+              title="从一次帮忙，到长期回访"
+              description="首页保留近期三条记录，完整时间线与来源说明集中在助农页面。"
+              action={
+                <Button asChild variant="secondary">
+                  <Link to="/agri-aid">查看完整档案 <ArrowUpRight size={16} aria-hidden="true" /></Link>
+                </Button>
+              }
+            />
+            <div className="paper-panel divide-y divide-paper-line overflow-hidden">
+              {homeAidHighlights.map((event) => (
+                <Link
+                  key={event.sourceEventId}
+                  to="/agri-aid"
+                  className="grid min-h-20 gap-2 px-4 py-3 transition hover:bg-sprout-green/8 sm:grid-cols-[7rem_1fr_auto] sm:items-center"
+                >
+                  <span className="font-mono text-xs font-semibold text-wheat-strong">{event.date}</span>
+                  <span>
+                    <strong className="block font-serif text-lg text-field-ink">{event.title}</strong>
+                    <span className="mt-1 flex items-center gap-1 text-xs text-field-soft">
+                      <MapPin size={13} aria-hidden="true" />{event.location}
+                    </span>
+                  </span>
+                  <ArrowUpRight className="hidden text-field-green sm:block" size={18} aria-hidden="true" />
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
       </FadeIn>
 
       <FadeIn>
@@ -106,7 +137,7 @@ export default function HomePage() {
           <div className="field-container">
             <SectionHeader eyebrow="后陡门通讯" title="十个勤天动态" description="后台录入的公开信息，与粉丝社区分开，保留来源和时间线。" />
             <div className="grid gap-4 md:grid-cols-2">
-              {officialUpdates.map((update, index) => (
+              {officialUpdates.slice(0, 4).map((update, index) => (
                 <FadeIn key={update.id} delay={index * 0.05}>
                   <article className="paper-panel letter-card record-card p-5">
                     <p className="field-tag">{update.type}</p>
@@ -126,7 +157,7 @@ export default function HomePage() {
             <SectionHeader eyebrow="麦田回声" title="粉丝互动精选" description="留言卡保持米白纸张和深绿色文字，互动温暖但平静。" />
             <div className="grid gap-4 md:grid-cols-2">
               {communityPosts.length ? (
-                communityPosts.map((post, index) => (
+                communityPosts.slice(0, 4).map((post, index) => (
                   <FadeIn key={post.id} delay={index * 0.05}>
                     <PostCard post={post} members={members} />
                   </FadeIn>

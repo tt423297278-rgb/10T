@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Menu, Sprout, UserRound } from 'lucide-react'
+import { Sprout, UserRound } from 'lucide-react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { Button } from '../common/Button'
 import { useAppStore } from '../../app/store/useAppStore'
@@ -104,9 +104,6 @@ export function SiteHeader() {
             </Button>
           )}
         </div>
-        <Button variant="ghost" className="min-h-11 px-3 md:hidden" aria-label="打开导航">
-          <Menu size={22} aria-hidden="true" />
-        </Button>
       </div>
     </header>
   )
