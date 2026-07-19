@@ -21,7 +21,15 @@
 | 成员动态封面 | `public/images/news/iqiyi-zdb-first-photo.webp` | approved | https://www.iqiyi.com/kszt/1gr1a168fhq.html | 十个勤天复刻首张合影相关缩略图 |
 | 社区精选封面 | `public/images/news/iqiyi-zdb-wheat-vlog.webp` | approved | https://www.iqiyi.com/kszt/1gr1a168fhq.html | 小麦丰收 vlog 相关缩略图 |
 | 成员 01-10 个人介绍照片 | `public/images/members/member-01.webp` 至 `member-10.webp` | approved | 详见 `src/data/imageSources.ts` | 十位成员各自独立照片，统一压缩为 WebP 和 4:5 比例 |
+| 成员 01-10 卡通贴纸头像 | `public/images/members/stickers/member-sticker-01.webp` 至 `member-sticker-10.webp` | generated | OpenAI ImageGen，本项目生成 | 基于已确认可用的成员照片生成，仅用于站内装饰，不代表官方卡通形象 |
 | 食堂卡片品类封面（7 张） | `public/images/canteen/covers/canteen-cover-*.webp` | generated | OpenAI ImageGen，本项目生成 | 家常、鲜蔬海味、烧烤、火锅、主食、甜品和西式简餐的通用品类示意图；不是具体餐厅实拍，页面必须保留“品类示意”标识 |
+| 全站田野边框插画 | `public/images/decor/field-journal-wheat-overlay.webp` | generated | OpenAI ImageGen，本项目生成 | 原创麦穗、田野与野花透明装饰，用于页面边缘和分区衔接，不含第三方人物或品牌元素 |
+| 麦束装饰贴纸 | `public/images/decor/wheat-bundle-sticker.webp` | generated | OpenAI ImageGen，本项目生成 | 原创麦穗植物贴纸，用于分区标题和页脚装饰，不含第三方人物或品牌元素 |
+| 首页丰收麦田前景 | `public/images/decor/field-horizon-home.webp` | generated | OpenAI ImageGen，本项目生成 | 原创成熟麦田与田垄透明插画，仅用于首页首屏田野氛围，不含人物、文字或品牌元素 |
+| 活动野花草甸装饰 | `public/images/decor/wildflower-meadow-overlay.webp` | generated | OpenAI ImageGen，本项目生成 | 原创波斯菊、雏菊与乡野草本透明插画，用于活动和社区页面，不含人物、文字或品牌元素 |
+| 助农秧苗土壤装饰 | `public/images/decor/seedling-soil-overlay.webp` | generated | OpenAI ImageGen，本项目生成 | 原创秧苗、田垄与浇水壶透明插画，用于助农和签到页面，不含人物、文字或品牌元素 |
+| 食堂丰收食材装饰 | `public/images/decor/harvest-table-overlay.webp` | generated | OpenAI ImageGen，本项目生成 | 原创蔬菜、南瓜、谷物和竹篮透明插画，用于食堂页面，不代表具体餐厅或菜品实拍 |
+| 影像手账装饰 | `public/images/decor/film-field-overlay.webp` | generated | OpenAI ImageGen，本项目生成 | 原创胶片、相机、空白相纸与蕨叶透明插画，用于名场面、影像馆和动态页面，不含人物或品牌元素 |
 
 完整来源台账见 `src/data/imageSources.ts`。
 

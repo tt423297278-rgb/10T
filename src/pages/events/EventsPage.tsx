@@ -1,14 +1,16 @@
 import { useMemo, useState } from 'react'
-import { CalendarDays, Clock3, MapPin, UsersRound } from 'lucide-react'
+import { ArrowUpRight, CalendarDays, Clock3, MapPin, Megaphone, UsersRound } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { EventStatus, EventType, FanEvent, Member } from '../../types/domain'
 import { filterEvents } from '../../features/events/eventFilters'
 import { formatEventStartLabel } from '../../features/events/eventTime'
+import { getVisibleEventIndexEvents } from '../../features/events/eventIndex'
 import { PageMeta } from '../../components/common/PageMeta'
 import { SectionHeader } from '../../components/common/SectionHeader'
 import { StateBlock } from '../../components/common/StateBlock'
 import { StatusBadge } from '../../components/common/StatusBadge'
 import { useEventsQuery, useMembersQuery } from '../../hooks/usePublicData'
+import { eventAnnouncements } from '../../data/eventAnnouncements'
 
 const eventTypes: Array<EventType | 'all'> = ['all', '直播', '演出', '综艺', '音乐', '品牌活动', '线下活动', '公开行程', '其他']
 const eventStatuses: Array<EventStatus | 'all'> = ['all', '待确认', '即将开始', '正在进行', '已结束', '已取消', '已延期']
@@ -51,8 +53,8 @@ function getEventShortTitle(event: FanEvent) {
 
 function getEventToneClass(event: FanEvent) {
   if (event.status === '已结束') return 'border-paper-line bg-field-muted/45 text-field-soft line-through decoration-paper-line'
-  if (event.status === '正在进行') return 'border-brick/30 bg-brick/[0.08] text-brick'
-  if (event.status === '即将开始') return 'border-field-green/35 bg-field-surface text-field-green shadow-[inset_3px_0_0_rgba(36,77,56,0.22)]'
+  if (event.status === '正在进行') return 'border-brick/35 bg-brick/[0.09] !font-bold text-[#512f27]'
+  if (event.status === '即将开始') return 'border-field-green/40 bg-field-surface !font-bold text-[#183b2a] shadow-[inset_3px_0_0_rgba(36,77,56,0.22)]'
   if (event.type === '演出') return 'border-field-green/25 bg-field-surface text-field-green'
   if (event.type === '综艺') return 'border-sky-blue/45 bg-field-surface text-field-ink'
   if (event.type === '音乐') return 'border-wheat/35 bg-field-surface text-soil-brown'
@@ -93,25 +95,26 @@ function getCalendarEventGridClass(count: number) {
 function EventListItem({ event, members }: { event: FanEvent; members: Member[] }) {
   const eventMembers = members.filter((member) => event.memberIds.includes(member.id))
   const isEnded = event.status === '已结束'
+  const isHighlighted = event.status === '正在进行' || event.status === '即将开始'
 
   return (
     <Link
       to={`/events/${event.id}`}
-      className={`group block rounded-[14px] border p-3 transition duration-300 ease-field hover:-translate-y-0.5 hover:shadow-field-sm ${
+      className={`fan-ticket-card group block rounded-[14px] border p-3 transition duration-300 ease-field hover:-translate-y-0.5 hover:shadow-field-sm ${
         isEnded
           ? 'border-paper-line bg-field-muted/35 opacity-82 hover:border-paper-line'
           : 'border-field-green/18 bg-field-surface/92 shadow-[inset_4px_0_0_rgba(36,77,56,0.18)] hover:border-field-green/35 hover:bg-field-surface'
       }`}
     >
       <div className="flex flex-wrap items-center gap-1.5">
-        <StatusBadge>{event.status}</StatusBadge>
+        <StatusBadge className={isHighlighted ? '!font-bold !text-field-ink' : undefined}>{event.status}</StatusBadge>
         <span className="field-tag">{event.type}</span>
       </div>
-      <h3 className={`mt-2 font-serif text-lg font-semibold leading-snug group-hover:text-field-green ${isEnded ? 'text-field-soft' : 'text-field-ink'}`}>
+      <h3 className={`mt-2 font-serif text-lg leading-snug group-hover:text-field-green ${isEnded ? 'font-semibold text-field-soft' : isHighlighted ? 'font-bold text-[#1d2922]' : 'font-semibold text-field-ink'}`}>
         {event.title}
       </h3>
-      <p className="mt-1 line-clamp-2 text-xs leading-5 text-field-soft">{event.description}</p>
-      <div className="mt-3 grid gap-1.5 text-xs text-field-soft">
+      <p className={`mt-1 line-clamp-2 text-xs leading-5 ${isHighlighted ? 'font-medium text-field-ink/80' : 'text-field-soft'}`}>{event.description}</p>
+      <div className={`mt-3 grid gap-1.5 text-xs ${isHighlighted ? 'font-medium text-field-ink/78' : 'text-field-soft'}`}>
         <span className="record-meta">
           <Clock3 size={14} aria-hidden="true" />
           {formatEventStartLabel(event, 'medium')}
@@ -148,19 +151,52 @@ export default function EventsPage() {
     return { day, dayEvents }
   })
   const selectedEvents = selectedDay ? filteredEvents.filter((event) => isEventOnDay(event, month, selectedDay)) : filteredEvents
+  const eventIndexEvents = getVisibleEventIndexEvents(selectedEvents)
   const calendarBlanks = Array.from({ length: getMonthStartOffset(month) }, (_, index) => `blank-${index}`)
-  const activeDayLabel = selectedDay ? `${month}-${String(selectedDay).padStart(2, '0')}` : '本月筛选结果'
+  const activeDayLabel = selectedDay ? `${month}-${String(selectedDay).padStart(2, '0')}` : '只看未结束'
 
   return (
     <section className="events-atmosphere py-12">
       <div className="field-container">
-        <PageMeta title="活动日历" description="支持成员、类型、状态和月份筛选的活动日历原型。" path="/events" />
+        <PageMeta title="活动日历" description="人工核验十个勤天及成员公开活动，支持按成员、类型、状态和月份筛选。" path="/events" />
         <SectionHeader
           level={1}
           eyebrow="田野月历"
           title="把公开活动整理成田野日程"
-          description="活动数据优先读取 Supabase；不自动抓取第三方平台，待确认信息保持克制标注。"
+          description="公开活动已人工核验至 2026.07.18；优先采用官方账号、主办方和文旅部门信息，待确认内容不强行写入日历。"
         />
+
+        <section className="journal-sheet event-glass-panel mb-6 overflow-hidden" aria-labelledby="event-announcement-title">
+          <div className="grid gap-4 p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+            <div>
+              <p className="field-tag mb-3 inline-flex items-center gap-1.5">
+                <Megaphone size={14} aria-hidden="true" /> 已官宣 · 待定档
+              </p>
+              <h2 id="event-announcement-title" className="font-serif text-xl font-semibold text-field-ink sm:text-2xl">
+                {eventAnnouncements[0]?.title}
+              </h2>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-field-soft">{eventAnnouncements[0]?.summary}</p>
+              <p className="mt-2 text-xs text-field-soft">
+                官宣日期：{eventAnnouncements[0]?.publishedAt.replaceAll('-', '.')} · 来源：{eventAnnouncements[0]?.sourceLabel}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {eventAnnouncements[0]?.locations.map((location) => (
+                  <span key={location} className="field-tag">{location}</span>
+                ))}
+              </div>
+            </div>
+            {eventAnnouncements[0] ? (
+              <a
+                href={eventAnnouncements[0].sourceUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="interactive-press inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] border border-field-green/20 bg-field-surface px-4 text-sm font-semibold text-field-green hover:border-field-green/35"
+              >
+                核对官宣来源 <ArrowUpRight size={16} aria-hidden="true" />
+              </a>
+            ) : null}
+          </div>
+        </section>
 
       <div className="journal-sheet event-glass-panel mb-6 grid gap-3 p-4 md:grid-cols-4">
         <label className="grid gap-1 text-sm font-semibold text-field-ink">
@@ -313,20 +349,20 @@ export default function EventsPage() {
                 <div>
                   <p className="field-tag">{activeDayLabel}</p>
                   <h2 className="mt-2 font-serif text-2xl font-semibold text-field-ink">
-                    {selectedDay ? '当天日程' : '活动索引'}
+                    {selectedDay ? '当天未结束日程' : '接下来活动'}
                   </h2>
                   <p className="mt-2 text-xs leading-5 text-field-soft">
-                    {selectedDay ? '再次点击日期可返回全部筛选结果。' : '左侧月历显示简称，右侧用于快速扫读和进入详情。'}
+                    {selectedDay ? '右侧只保留当天尚未结束的行程；再次点击日期可返回全部结果。' : '已结束和已取消的活动不再占位，最近的未结束活动排在最前面。'}
                   </p>
                 </div>
               </div>
             </div>
-            {selectedEvents.length ? (
+            {eventIndexEvents.length ? (
               <div className="grid gap-2.5">
-                {selectedEvents.map((event) => <EventListItem key={event.id} event={event} members={members} />)}
+                {eventIndexEvents.map((event) => <EventListItem key={event.id} event={event} members={members} />)}
               </div>
             ) : (
-              <StateBlock type="empty" title="这一天没有活动" description="可以选择其他日期，或放宽成员、类型和状态筛选。" />
+              <StateBlock type="empty" title="暂无未结束活动" description="可以选择其他日期，或放宽成员、类型和状态筛选。" />
             )}
           </div>
         </div>

@@ -36,6 +36,8 @@ const userProvidedHeroLicense =
   'approved：用户本地文件夹提供的首页轮播素材；已复制到项目 public 目录，用于当前网站首页 Hero 轮播展示。'
 const memberPortraitLicense =
   'approved：用户已确认公开成员照片素材可用于当前项目；素材已本地化保存为 WebP，仅做等比裁切、低饱和压缩和尺寸适配，未去除水印、Logo、署名或版权标识。'
+const memberStickerLicense =
+  'generated：使用 OpenAI ImageGen 基于本项目已获用户确认可用的十位成员照片进行风格化生成；仅作为站内卡通贴纸装饰，不代表官方卡通形象。'
 
 export const heroGroupPortrait: ImageAsset & {
   desktopSrc: string
@@ -485,6 +487,20 @@ export const imageSources: ImageSourceRecord[] = [
       publisherOrRightsHolder: source.publisher,
       downloadedAt: memberDownloadedAt,
       licenseNote: memberPortraitLicense,
+      status: 'approved' as const,
+    }
+  }),
+  ...memberNames.map((name, index) => {
+    const order = String(index + 1).padStart(2, '0')
+    return {
+      id: `member-${order}-sticker`,
+      localPath: `public/images/members/stickers/member-sticker-${order}.webp`,
+      usage: '成员卡片、内页导航和全站陪伴装饰',
+      subject: `${name} 卡通贴纸头像`,
+      originalSourcePage: 'OpenAI ImageGen，本项目生成',
+      publisherOrRightsHolder: '本项目生成',
+      downloadedAt: '2026-07-18',
+      licenseNote: memberStickerLicense,
       status: 'approved' as const,
     }
   }),
