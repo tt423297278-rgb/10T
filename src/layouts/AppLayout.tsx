@@ -4,6 +4,8 @@ import { SiteFooter } from '../components/layout/SiteFooter'
 import { SiteHeader } from '../components/navigation/SiteHeader'
 import { MobileTabBar } from '../components/navigation/MobileTabBar'
 import { BackToTopButton } from '../components/navigation/BackToTopButton'
+import { CompanionStickerRibbon } from '../components/member/CompanionStickerRibbon'
+import { FanPageDoodles } from '../components/layout/FanPageDoodles'
 import { useAppStore } from '../app/store/useAppStore'
 
 export function AppLayout() {
@@ -14,6 +16,7 @@ export function AppLayout() {
   return (
     <div className="min-h-dvh">
       <SiteHeader />
+      {location.pathname !== '/' ? <CompanionStickerRibbon /> : null}
       <AnimatePresence mode="wait" initial={false}>
         <motion.main
           key={location.pathname}
@@ -24,6 +27,7 @@ export function AppLayout() {
           exit={reduceMotion ? undefined : { opacity: 0, y: -6 }}
           transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
         >
+          <FanPageDoodles />
           <Outlet />
         </motion.main>
       </AnimatePresence>

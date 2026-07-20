@@ -3,6 +3,7 @@ import { events as fallbackEvents } from '../data/events'
 import { members as fallbackMembers } from '../data/members'
 import { officialUpdates as fallbackOfficialUpdates } from '../data/community'
 import { mapEventRow, mapMemberRow, mapOfficialUpdateRow, type EventRow, type MemberRow, type OfficialUpdateRow } from './publicDataMappers'
+import { withEffectiveEventStatus } from '../features/events/eventTime'
 
 export const publicDataService = {
   async listMembers() {
@@ -18,7 +19,7 @@ export const publicDataService = {
   },
 
   async listEvents() {
-    if (!supabase) return fallbackEvents
+    if (!supabase) return fallbackEvents.map((event) => withEffectiveEventStatus(event))
 
     const { data, error } = await supabase
       .from('events')
@@ -26,7 +27,7 @@ export const publicDataService = {
       .order('starts_at', { ascending: true })
 
     if (error) throw error
-    return (data as EventRow[]).map(mapEventRow)
+    return (data as EventRow[]).map(mapEventRow).map((event) => withEffectiveEventStatus(event))
   },
 
   async listOfficialUpdates() {

@@ -4,6 +4,7 @@ import type { Member } from '../../types/domain'
 import { MediaFrame } from '../common/MediaFrame'
 import { Button } from '../common/Button'
 import { cn } from '../../lib/utils/cn'
+import { getCompanionSticker } from '../../data/companionStickers'
 
 export function MemberCard({
   member,
@@ -16,23 +17,31 @@ export function MemberCard({
 }) {
   const order = member.id.replace(/\D/g, '').padStart(2, '0')
   const visibleTags = compact ? member.tags.slice(0, 2) : member.tags.slice(0, 3)
+  const sticker = getCompanionSticker(member.id)
 
   if (compact) {
     return (
       <article className="paper-panel dossier-card record-card member-card-compact flex h-full flex-col overflow-hidden hover:shadow-field-md">
-        <MediaFrame
-          title={member.name}
-          alt={member.image?.alt ?? `${member.name} 授权照片占位`}
-          src={member.image?.status === 'approved' || member.image?.status === 'placeholder' ? member.image.src : undefined}
-          tone={member.avatarTone}
-          objectPosition={member.image?.mobileObjectPosition ?? member.image?.objectPosition ?? 'center top'}
-          fit="cover"
-          className="archive-photo rounded-b-none border-x-0 border-t-0 [&>div]:aspect-square [&>div]:min-h-0"
-          captionClassName="sr-only"
-        />
+        {sticker ? (
+          <Link
+            to={`/members/${member.id}`}
+            className="member-sticker-card-art"
+            aria-label={`查看${member.name}的成员档案`}
+          >
+            <img
+              src={sticker.src}
+              alt={`${member.name}卡通贴纸头像`}
+              width="360"
+              height="592"
+              loading="lazy"
+              decoding="async"
+            />
+            <span className="member-sticker-card-number">NO. {order}</span>
+          </Link>
+        ) : null}
         <div className="flex flex-1 flex-col p-3">
           <div className="flex items-center justify-between gap-2">
-            <p className="field-tag">档案 NO. {order}</p>
+            <p className="field-tag">田野伙伴</p>
             <button
               className="interactive-press flex min-h-11 min-w-11 items-center justify-center rounded-[9px] text-field-soft transition hover:bg-sprout-green/12 hover:text-field-green"
               aria-label={`收藏 ${member.name}`}

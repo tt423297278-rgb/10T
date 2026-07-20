@@ -17,7 +17,8 @@ describe('public event data', () => {
 
     expect(guiyang?.memberIds).toEqual(['member-2', 'member-5', 'member-6', 'member-7', 'member-8', 'member-10'])
     expect(guiyang?.timeTbd).toBe(true)
-    expect(hangzhou?.startsAt).toContain('2026-08-07')
+    expect(hangzhou?.startsAt).toBe('2026-08-07T19:00:00+08:00')
+    expect(hangzhou?.timeTbd).toBeUndefined()
     expect(zhengzhou?.startsAt).toContain('2026-08-21')
     expect(chengdu?.startsAt).toContain('2026-08-28')
     expect(chengdu?.location).toBe('东安湖体育公园多功能体育馆')

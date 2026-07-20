@@ -34,10 +34,31 @@ export function FieldJournalHero() {
     <section className="poster-hero">
       <div className="poster-forest" aria-hidden="true" />
       <div className="poster-field" aria-hidden="true" />
-      <div className="absolute left-[7%] top-[16%] hidden h-28 w-16 border-l-2 border-field-green/36 md:block" aria-hidden="true">
-        <span className="absolute left-3 top-2 h-24 w-px rotate-[-16deg] bg-field-green/30" />
-        <span className="absolute left-6 top-5 h-20 w-px rotate-[12deg] bg-field-green/28" />
-        <span className="absolute left-9 top-1 h-24 w-px rotate-[2deg] bg-field-green/24" />
+      <div className="hero-morning-sun" aria-hidden="true">
+        <span className="hero-morning-sun-glow" />
+        <svg viewBox="0 0 176 118" role="presentation">
+          <defs>
+            <radialGradient id="hero-morning-sun-core" cx="36%" cy="30%" r="74%">
+              <stop offset="0" stopColor="#fff8cf" />
+              <stop offset="0.5" stopColor="#f3c75e" />
+              <stop offset="1" stopColor="#d4862f" />
+            </radialGradient>
+          </defs>
+          <g className="hero-morning-sun-rays" stroke="#c98232" strokeLinecap="round">
+            <path d="M66 3v16" />
+            <path d="M66 84v16" />
+            <path d="M17 51h17" />
+            <path d="M99 51h17" />
+            <path d="m29 14 13 14" />
+            <path d="m90 75 13 14" />
+            <path d="m29 88 13-14" />
+            <path d="m90 28 13-14" />
+          </g>
+          <circle cx="66" cy="51" r="29" fill="url(#hero-morning-sun-core)" stroke="#b86f2b" strokeWidth="1.5" />
+          <circle cx="58" cy="42" r="7" fill="#fffce3" opacity="0.72" />
+          <path d="M111 33q6-6 12 0m4 10q5-5 10 0m7-21q5-5 10 0" fill="none" stroke="#4d6856" strokeLinecap="round" strokeWidth="2" />
+        </svg>
+        <span className="hero-morning-sun-caption">晨光正好 · 向田野去</span>
       </div>
 
       <div className="field-container relative z-10 grid min-h-[calc(100dvh-4rem)] items-end gap-8 pb-12 pt-12 md:grid-cols-[.82fr_1.18fr] md:items-center md:pb-16">

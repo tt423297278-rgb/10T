@@ -18,7 +18,7 @@ const tourSourceXiamen = 'https://www.sina.cn/news/detail/5314394634062485.html'
 const tourSourceGuangzhou = 'https://weibo.com/7923156618/5315572435782110'
 const tourSourceGuangzhouAdded = 'https://gz.bendibao.com/xiuxian/2026715/369949.shtm'
 const guiyangFestivalSource = 'https://www.weibo.com/u/7735882618?tabtype=newVideo'
-const tourScheduleSource = 'https://ent.sina.cn/2026-07-11/detail-inihkyii5065288.d.html'
+const tourSourceHangzhou = 'https://www.sina.cn/news/detail/5301331578847818.html'
 const tourSourceZhengzhou = 'https://m.zz.bendibao.com/xiuxian/152562.shtm'
 const tourSourceChengdu = 'https://news.chengdu.cn/2026/0607/6a24c326cfd50212c36bfbfd.shtml'
 const luzhuoSource = 'https://www.sina.cn/news/detail/5306770928960584.html'
@@ -158,7 +158,7 @@ export const events: FanEvent[] = [
     id: 'tour-2026-guangzhou',
     title: '十个勤天 2026《贰零贰贰》巡回演唱会 广州站',
     type: '演出',
-    status: '即将开始',
+    status: '正在进行',
     startsAt: '2026-07-17T19:30:00+08:00',
     endsAt: '2026-07-19T22:00:00+08:00',
     location: '宝能广州国际体育演艺中心',
@@ -169,7 +169,7 @@ export const events: FanEvent[] = [
     sourceUrl: tourSourceGuangzhou,
     coverTone: 'from-soil-brown to-wheat',
     coverImage: activityImages['tour-2026-guangzhou'],
-    updatedAt: '2026-07-16',
+    updatedAt: '2026-07-18',
     notes: '演出时间、入场规则和票务状态以官方平台最终公告为准。',
   },
   {
@@ -232,18 +232,17 @@ export const events: FanEvent[] = [
     title: '十个勤天 2026《贰零贰贰》巡回演唱会 杭州站',
     type: '演出',
     status: '即将开始',
-    startsAt: '2026-08-07T00:00:00+08:00',
-    endsAt: '2026-08-09T23:59:59+08:00',
-    timeTbd: true,
+    startsAt: '2026-08-07T19:00:00+08:00',
+    endsAt: '2026-08-09T22:00:00+08:00',
     location: '杭州奥体中心体育馆',
     platform: '线下',
     memberIds: allMembers,
-    description: '公开巡演信息显示杭州站第一轮演出日期为 2026 年 8 月 7 日至 8 月 9 日。',
-    sourceLabel: '公开巡演排期 / 新浪娱乐核对',
-    sourceUrl: tourScheduleSource,
+    description: '浙江文旅公开信息显示，杭州站第一轮三场均为 19:00 至 22:00，日期为 2026 年 8 月 7 日至 8 月 9 日。',
+    sourceLabel: '浙江文旅数字宣推官 / 新浪新闻转载',
+    sourceUrl: tourSourceHangzhou,
     coverTone: 'from-field-green to-sky-blue',
     coverImage: activityImages['tour-2026-xiamen'],
-    updatedAt: '2026-07-16',
+    updatedAt: '2026-07-18',
     notes: '该站详细入场规则、票务信息和最终时间以官方后续公告为准。',
   },
   {
@@ -251,18 +250,17 @@ export const events: FanEvent[] = [
     title: '十个勤天 2026《贰零贰贰》巡回演唱会 杭州站第二轮',
     type: '演出',
     status: '即将开始',
-    startsAt: '2026-08-14T00:00:00+08:00',
-    endsAt: '2026-08-16T23:59:59+08:00',
-    timeTbd: true,
+    startsAt: '2026-08-14T19:00:00+08:00',
+    endsAt: '2026-08-16T22:00:00+08:00',
     location: '杭州奥体中心体育馆',
     platform: '线下',
     memberIds: allMembers,
-    description: '公开巡演信息显示杭州站第二轮演出日期为 2026 年 8 月 14 日至 8 月 16 日。',
-    sourceLabel: '公开巡演排期 / 新浪娱乐核对',
-    sourceUrl: tourScheduleSource,
+    description: '浙江文旅公开信息显示，杭州站第二轮三场均为 19:00 至 22:00，日期为 2026 年 8 月 14 日至 8 月 16 日。',
+    sourceLabel: '浙江文旅数字宣推官 / 新浪新闻转载',
+    sourceUrl: tourSourceHangzhou,
     coverTone: 'from-field-green to-sky-blue',
     coverImage: activityImages['tour-2026-xiamen'],
-    updatedAt: '2026-07-16',
+    updatedAt: '2026-07-18',
     notes: '该站详细入场规则、票务信息和最终时间以官方后续公告为准。',
   },
   {

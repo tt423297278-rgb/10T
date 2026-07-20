@@ -56,6 +56,7 @@ import {
   type CanteenSortId,
 } from '../../features/canteen/canteenFilters'
 import { getCanteenCover } from '../../features/canteen/canteenCovers'
+import { pickPopularCanteenCity, popularCanteenCities } from '../../features/canteen/canteenPopularCities'
 import { loadCanteenRegion } from '../../services/canteenDataService'
 import { canteenRatingService } from '../../services/canteenRatingService'
 import { canteenSubmissionService } from '../../services/canteenSubmissionService'
@@ -69,19 +70,6 @@ import type { CanteenSubmissionDraft } from '../../features/canteen/canteenSubmi
 import type { CanteenPlace, CanteenRatingScores, CanteenRatingSummary } from '../../types/domain'
 
 const countFormatter = new Intl.NumberFormat('zh-CN')
-const popularCanteenCities = [
-  { city: '北京', region: '北京' },
-  { city: '上海', region: '上海' },
-  { city: '广州', region: '广东' },
-  { city: '杭州', region: '浙江' },
-  { city: '成都', region: '四川' },
-  { city: '重庆', region: '重庆' },
-  { city: '西安', region: '陕西' },
-  { city: '长沙', region: '湖南' },
-  { city: '南京', region: '江苏' },
-  { city: '厦门', region: '福建' },
-] as const
-
 function CanteenCategoryIcon({ category }: { category: string }) {
   let Icon = UtensilsCrossed
 
@@ -224,6 +212,7 @@ export default function CanteenPage() {
   const [pickDialogOpen, setPickDialogOpen] = useState(false)
   const [ratingPlace, setRatingPlace] = useState<CanteenPlace | null>(null)
   const [submissionDialogOpen, setSubmissionDialogOpen] = useState(false)
+  const [defaultPopularCity] = useState(() => pickPopularCanteenCity())
 
   const regionParam = searchParams.get('region') ?? allFilterValue
   const selectedRegion = canteenRegions.find((region) => region.name === regionParam)
@@ -242,6 +231,15 @@ export default function CanteenPage() {
     [searchParams],
   )
   const priceFilterKey = selectedPriceBands.join(',')
+
+  useEffect(() => {
+    if (searchParams.has('region') || searchParams.has('city')) return
+
+    const params = new URLSearchParams(searchParams)
+    params.set('region', defaultPopularCity.region)
+    params.set('city', defaultPopularCity.city)
+    setSearchParams(params, { replace: true })
+  }, [defaultPopularCity, searchParams, setSearchParams])
 
   useEffect(() => {
     if (!selectedRegion) {
@@ -341,7 +339,7 @@ export default function CanteenPage() {
     setSearchParams(params, { replace: true })
   }
 
-  const resetFilters = () => updateFilters(allFilterValue, allFilterValue, allFilterValue, [], '', false, 'default')
+  const resetFilters = () => updateFilters(defaultPopularCity.region, defaultPopularCity.city, allFilterValue, [], '', false, 'default')
 
   const togglePriceBand = (priceBand: CanteenPriceBandId) => {
     const nextPriceBands = selectedPriceBands.includes(priceBand)
