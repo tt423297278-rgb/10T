@@ -30,9 +30,11 @@
 
 ## 字体
 
-- 标题：`Noto Serif SC` / `Songti SC`，用于页面标题、模块标题和档案标题。
-- 正文：`PingFang SC` / `Source Han Sans SC` / `Noto Sans SC`，保证中文阅读清晰。
-- 数字和英文：`Inter` / `JetBrains Mono`，用于日期、签到数、活动时间。
+- 正文：系统优先的中文无衬线字体，依次使用 `PingFang SC` / `Microsoft YaHei UI` / `Microsoft YaHei` / `Noto Sans SC`，保证 Windows、macOS 和移动端阅读稳定。
+- 标题：沿用同一中文无衬线体系，通过 `600-700` 字重、字号和留白建立层级；不在栏目间混用楷体、宋体或书法字体。
+- 数字和英文：`Segoe UI` / `Arial`，配合 `tabular-nums` 用于日期、签到数和活动时间，不让中文标签落入代码等宽字体。
+- 装饰性字体只允许出现在极短的英文眉题或素材图内，不能用于正文、筛选器、卡片标题和连续阅读内容。
+- 旧有 `font-serif`、`font-mono` 工具类作为兼容别名，分别映射到标题字体和数据字体；新增页面优先使用语义化字体 Token。
 
 ## 材质
 

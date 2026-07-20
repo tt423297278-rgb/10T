@@ -55,6 +55,9 @@ describe('CanteenRatingDialog', () => {
     expect(screen.getByText('本次综合评分')).toBeTruthy()
     expect(screen.getByText('4.3')).toBeTruthy()
     expect(screen.getByLabelText('本次综合评分 4.3 星')).toBeTruthy()
+    fireEvent.change(screen.getByRole('textbox', { name: '写一句到店感受' }), {
+      target: { value: '  锅底很香，\n服务也很热情。  ' },
+    })
     const imageFile = new File(['meal'], 'meal.webp', { type: 'image/webp' })
     fireEvent.change(screen.getByLabelText(/添加图片/), { target: { files: [imageFile] } })
     expect(screen.getByAltText('已选择的评价图片：meal.webp')).toBeTruthy()
@@ -64,6 +67,7 @@ describe('CanteenRatingDialog', () => {
     await waitFor(() => {
       expect(onSubmit).toHaveBeenCalledWith(
         { taste: 4.5, service: 4, value: 3.5, environment: 5 },
+        '锅底很香， 服务也很热情。',
         [imageFile],
       )
     })
@@ -88,6 +92,7 @@ describe('CanteenRatingDialog', () => {
     expect(screen.getByText(/本地预览/)).toBeTruthy()
     expect(screen.getAllByRole('slider')).toHaveLength(4)
     expect(screen.getByLabelText(/添加图片/)).toBeTruthy()
+    expect(screen.getByRole('textbox', { name: '写一句到店感受' })).toBeTruthy()
     expect(screen.getByText('已完成 0/4')).toBeTruthy()
 
     fireEvent.change(screen.getByLabelText('口味评分，0.5 星递增'), { target: { value: '4.5' } })

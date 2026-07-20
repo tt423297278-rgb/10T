@@ -16,6 +16,16 @@ export const emptyCanteenRatingScores: CanteenRatingScores = {
   environment: 0,
 }
 
+export const canteenRatingReviewMaxLength = 120
+
+export function normalizeCanteenRatingReview(value: string) {
+  return value.replace(/\s+/g, ' ').trim()
+}
+
+export function validateCanteenRatingReview(value: string) {
+  return normalizeCanteenRatingReview(value).length <= canteenRatingReviewMaxLength
+}
+
 export function isValidCanteenRatingScore(value: number) {
   return Number.isFinite(value) && value >= 0.5 && value <= 5 && Number.isInteger(value * 2)
 }

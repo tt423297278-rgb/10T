@@ -17,7 +17,7 @@
 ## 业务组件
 - 成员：`MemberCard`、`MemberHero`、`TimelineList`、`MemberMediaGrid`。
 - 活动：`EventFilterBar`、`CalendarMonth`、`EventList`、`EventCard`。
-- 食堂：`CanteenFilterBar`（含餐厅名称搜索）、`CanteenCard`、`MealPick`、`CanteenRatingDialog`、半星 `RatingStars`、评价图片选择/预览区、`CanteenRestaurantSubmissionDialog` 与按需加载的 `CanteenAmapPicker`。
+- 食堂：`CanteenFilterBar`（含餐厅名称搜索）、`CanteenCard`、`MealPick`、`CanteenRatingDialog`、半星 `RatingStars`、一句话点评输入、评价图片选择/预览区、`CanteenRestaurantSubmissionDialog` 与按需加载的 `CanteenAmapPicker`。
 - 签到：`CheckInPanel`、`CheckInCalendar`、`PointLedgerList`、`BadgeShelf`。
 - 社区：`PostCard`、`PostComposerPreview`、`CommentThread`、`InteractionBar`。
 - 动态：`OfficialUpdateCard`、`UpdateFilterBar`。

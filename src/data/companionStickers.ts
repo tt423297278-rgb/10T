@@ -20,3 +20,8 @@ export const companionStickers: CompanionSticker[] = [
 export function getCompanionSticker(memberId: string) {
   return companionStickers.find((sticker) => sticker.memberId === memberId)
 }
+
+export function getCompanionStickerFromPathname(pathname: string) {
+  const match = pathname.match(/^\/members\/(member-(?:10|[1-9]))(?:\/|$)/)
+  return match?.[1] ? getCompanionSticker(match[1]) : undefined
+}

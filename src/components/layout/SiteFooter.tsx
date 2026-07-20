@@ -1,15 +1,22 @@
 import { Heart, MessageCircleHeart, Sparkles } from 'lucide-react'
-import { Link } from 'react-router-dom'
-import { companionStickers } from '../../data/companionStickers'
+import { Link, useLocation } from 'react-router-dom'
+import {
+  companionStickers,
+  getCompanionStickerFromPathname,
+} from '../../data/companionStickers'
 
 export function SiteFooter() {
+  const location = useLocation()
+  const memberSticker = getCompanionStickerFromPathname(location.pathname)
+  const footerStickers = memberSticker ? [memberSticker] : companionStickers.slice(0, 3)
+
   return (
     <footer className="fan-home-footer mt-16 pb-24 pt-10 md:pb-10">
       <div className="field-container fan-home-footer-grid">
         <div className="fan-home-footer-postcard">
           <span className="fan-home-footer-tape" aria-hidden="true" />
-          <div className="fan-home-footer-stickers">
-            {companionStickers.slice(0, 3).map((sticker) => (
+          <div className={`fan-home-footer-stickers${memberSticker ? ' fan-home-footer-stickers-current' : ''}`}>
+            {footerStickers.map((sticker) => (
               <Link
                 key={sticker.memberId}
                 to={`/members/${sticker.memberId}`}

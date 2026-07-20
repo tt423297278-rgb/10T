@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { ArrowUpRight, CalendarDays, Clock3, MapPin, Megaphone, UsersRound } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { ArrowUpRight, CalendarCheck2, CalendarDays, Clock3, MapPin, Megaphone, UsersRound } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { EventStatus, EventType, FanEvent, Member } from '../../types/domain'
 import { filterEvents } from '../../features/events/eventFilters'
@@ -69,7 +69,8 @@ function getDayState(dayEvents: FanEvent[]) {
   return 'pending'
 }
 
-function getDayCellClass(dayEvents: FanEvent[], isSelected: boolean) {
+function getDayCellClass(dayEvents: FanEvent[], isSelected: boolean, isLinked: boolean) {
+  if (isLinked) return 'border-wheat-strong/70 bg-wheat/20 shadow-field-md ring-2 ring-wheat-gold/35'
   if (isSelected) return 'border-field-green/65 bg-field-green/12 shadow-field-sm ring-1 ring-field-green/20'
   const state = getDayState(dayEvents)
   if (state === 'ended') return 'border-paper-line/80 bg-field-muted/28 text-field-soft'
@@ -92,23 +93,60 @@ function getCalendarEventGridClass(count: number) {
   return 'mt-2 gap-1'
 }
 
-function EventListItem({ event, members }: { event: FanEvent; members: Member[] }) {
+function EventListItem({
+  event,
+  members,
+  isLinked,
+  cardRef,
+  onLinkStart,
+  onLinkEnd,
+}: {
+  event: FanEvent
+  members: Member[]
+  isLinked: boolean
+  cardRef: (element: HTMLAnchorElement | null) => void
+  onLinkStart: () => void
+  onLinkEnd: () => void
+}) {
   const eventMembers = members.filter((member) => event.memberIds.includes(member.id))
   const isEnded = event.status === '已结束'
   const isHighlighted = event.status === '正在进行' || event.status === '即将开始'
 
   return (
     <Link
+      ref={cardRef}
       to={`/events/${event.id}`}
-      className={`fan-ticket-card group block rounded-[14px] border p-3 transition duration-300 ease-field hover:-translate-y-0.5 hover:shadow-field-sm ${
+      data-testid={`event-index-${event.id}`}
+      data-linked={isLinked}
+      aria-current={isLinked ? 'true' : undefined}
+      onMouseEnter={onLinkStart}
+      onMouseLeave={onLinkEnd}
+      onFocus={onLinkStart}
+      onBlur={onLinkEnd}
+      className={`fan-ticket-card event-index-card group block rounded-[14px] border p-3 transition duration-200 ease-field hover:-translate-y-0.5 hover:shadow-field-sm ${
+        isLinked
+          ? 'border-wheat-strong/70 bg-wheat/18 shadow-field-md ring-2 ring-wheat-gold/30'
+          :
         isEnded
           ? 'border-paper-line bg-field-muted/35 opacity-82 hover:border-paper-line'
           : 'border-field-green/18 bg-field-surface/92 shadow-[inset_4px_0_0_rgba(36,77,56,0.18)] hover:border-field-green/35 hover:bg-field-surface'
       }`}
     >
-      <div className="flex flex-wrap items-center gap-1.5">
-        <StatusBadge className={isHighlighted ? '!font-bold !text-field-ink' : undefined}>{event.status}</StatusBadge>
-        <span className="field-tag">{event.type}</span>
+      <div className="mr-7 flex flex-wrap items-center justify-between gap-2">
+        <span className="flex flex-wrap items-center gap-1.5">
+          <StatusBadge className={isHighlighted ? '!font-bold !text-field-ink' : undefined}>{event.status}</StatusBadge>
+          <span className="field-tag">{event.type}</span>
+        </span>
+        <span
+          aria-hidden={!isLinked}
+          className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-bold transition duration-200 ${
+            isLinked
+              ? 'border-wheat-strong/45 bg-field-surface text-soil-brown opacity-100'
+              : 'pointer-events-none border-transparent opacity-0'
+          }`}
+        >
+          <CalendarCheck2 size={13} aria-hidden="true" /> 日历对应
+        </span>
       </div>
       <h3 className={`mt-2 font-serif text-lg leading-snug group-hover:text-field-green ${isEnded ? 'font-semibold text-field-soft' : isHighlighted ? 'font-bold text-[#1d2922]' : 'font-semibold text-field-ink'}`}>
         {event.title}
@@ -142,18 +180,39 @@ export default function EventsPage() {
   const [status, setStatus] = useState<EventStatus | 'all'>('all')
   const [month, setMonth] = useState('2026-07')
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
+  const [highlightedEventId, setHighlightedEventId] = useState<string | null>(null)
+  const eventCardRefs = useRef<Record<string, HTMLAnchorElement | null>>({})
   const filteredEvents = useMemo(() => filterEvents(events, { memberId, type, status, month }), [events, memberId, type, status, month])
   const [selectedYear, selectedMonth] = month.split('-')
 
-  const calendarDays = Array.from({ length: getDaysInMonth(month) }, (_, index) => {
+  const calendarDays = useMemo(() => Array.from({ length: getDaysInMonth(month) }, (_, index) => {
     const day = index + 1
     const dayEvents = filteredEvents.filter((event) => isEventOnDay(event, month, day))
     return { day, dayEvents }
-  })
-  const selectedEvents = selectedDay ? filteredEvents.filter((event) => isEventOnDay(event, month, selectedDay)) : filteredEvents
-  const eventIndexEvents = getVisibleEventIndexEvents(selectedEvents)
-  const calendarBlanks = Array.from({ length: getMonthStartOffset(month) }, (_, index) => `blank-${index}`)
+  }), [filteredEvents, month])
+  const selectedEvents = useMemo(
+    () => selectedDay ? filteredEvents.filter((event) => isEventOnDay(event, month, selectedDay)) : filteredEvents,
+    [filteredEvents, month, selectedDay],
+  )
+  const eventIndexEvents = useMemo(
+    () => selectedDay
+      ? selectedEvents.slice().sort((left, right) => new Date(left.startsAt).getTime() - new Date(right.startsAt).getTime())
+      : getVisibleEventIndexEvents(selectedEvents),
+    [selectedDay, selectedEvents],
+  )
+  const calendarBlanks = useMemo(
+    () => Array.from({ length: getMonthStartOffset(month) }, (_, index) => `blank-${index}`),
+    [month],
+  )
   const activeDayLabel = selectedDay ? `${month}-${String(selectedDay).padStart(2, '0')}` : '只看未结束'
+
+  useEffect(() => {
+    if (!selectedDay || !eventIndexEvents.length) return
+    const firstCard = eventCardRefs.current[eventIndexEvents[0].id]
+    if (!firstCard) return
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+    firstCard.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' })
+  }, [eventIndexEvents, selectedDay])
 
   return (
     <section className="events-atmosphere py-12">
@@ -206,6 +265,7 @@ export default function EventsPage() {
             onChange={(event) => {
               setMemberId(event.target.value)
               setSelectedDay(null)
+              setHighlightedEventId(null)
             }}
             className="field-input"
           >
@@ -224,6 +284,7 @@ export default function EventsPage() {
             onChange={(event) => {
               setType(event.target.value as EventType | 'all')
               setSelectedDay(null)
+              setHighlightedEventId(null)
             }}
             className="field-input"
           >
@@ -241,6 +302,7 @@ export default function EventsPage() {
             onChange={(event) => {
               setStatus(event.target.value as EventStatus | 'all')
               setSelectedDay(null)
+              setHighlightedEventId(null)
             }}
             className="field-input"
           >
@@ -259,6 +321,7 @@ export default function EventsPage() {
               onChange={(event) => {
                 setMonth(`${event.target.value}-${selectedMonth}`)
                 setSelectedDay(null)
+                setHighlightedEventId(null)
               }}
               className="field-input"
               aria-label="选择年份"
@@ -272,6 +335,7 @@ export default function EventsPage() {
               onChange={(event) => {
                 setMonth(`${selectedYear}-${event.target.value}`)
                 setSelectedDay(null)
+                setHighlightedEventId(null)
               }}
               className="field-input"
               aria-label="选择月份"
@@ -310,14 +374,30 @@ export default function EventsPage() {
               {calendarBlanks.map((blank) => (
                 <div key={blank} className="min-h-32 rounded-[12px] border border-paper-line/35 bg-field-muted/20" aria-hidden="true" />
               ))}
-              {calendarDays.map(({ day, dayEvents }) => (
-                <button
-                  key={day}
-                  type="button"
-                  aria-pressed={selectedDay === day}
-                  onClick={() => setSelectedDay(selectedDay === day ? null : day)}
-                  className={`interactive-press relative flex min-h-32 flex-col rounded-[12px] border p-2 text-left transition duration-300 hover:-translate-y-px hover:border-field-green/35 ${getDayCellClass(dayEvents, selectedDay === day)}`}
-                >
+              {calendarDays.map(({ day, dayEvents }) => {
+                const isSelected = selectedDay === day
+                const isLinked = highlightedEventId
+                  ? dayEvents.some((event) => event.id === highlightedEventId)
+                  : isSelected
+                const eventNames = dayEvents.map(getEventShortTitle).join('、')
+
+                return (
+                  <button
+                    key={day}
+                    type="button"
+                    data-testid={`calendar-day-${day}`}
+                    data-linked={isLinked}
+                    aria-label={`${Number(selectedMonth)}月${day}日，${dayEvents.length ? `${dayEvents.length}个活动：${eventNames}` : '无活动'}`}
+                    aria-pressed={isSelected}
+                    disabled={!dayEvents.length}
+                    onClick={() => {
+                      setHighlightedEventId(null)
+                      setSelectedDay(isSelected ? null : day)
+                    }}
+                    className={`event-calendar-day interactive-press relative flex min-h-32 flex-col rounded-[12px] border p-2 text-left transition duration-200 ${
+                      dayEvents.length ? 'cursor-pointer hover:-translate-y-px hover:border-field-green/35' : 'cursor-default'
+                    } ${getDayCellClass(dayEvents, isSelected, isLinked)}`}
+                  >
                   {getDayState(dayEvents) === 'ended' ? (
                     <span className="pointer-events-none absolute right-2 top-2 rotate-[-8deg] rounded-[5px] border border-paper-line px-1.5 py-0.5 text-[10px] font-bold text-field-soft opacity-80">
                       已结束
@@ -329,15 +409,20 @@ export default function EventsPage() {
                       {dayEvents.map((event) => (
                         <span
                           key={event.id}
-                          className={`flex min-h-0 items-center rounded-[8px] border font-semibold ${getCalendarEventTextClass(dayEvents.length)} ${getEventToneClass(event)}`}
+                          data-testid={`calendar-event-${event.id}`}
+                          data-linked={highlightedEventId ? highlightedEventId === event.id : isSelected}
+                          className={`event-calendar-pill flex min-h-0 items-center rounded-[8px] border font-semibold transition duration-200 ${
+                            highlightedEventId ? highlightedEventId === event.id ? 'ring-2 ring-wheat-gold/45' : '' : isSelected ? 'ring-2 ring-wheat-gold/35' : ''
+                          } ${getCalendarEventTextClass(dayEvents.length)} ${getEventToneClass(event)}`}
                         >
                           {getEventShortTitle(event)}
                         </span>
                       ))}
                     </span>
                   ) : null}
-                </button>
-              ))}
+                  </button>
+                )
+              })}
             </div>
           </div>
           <div className="grid content-start gap-3">
@@ -349,17 +434,37 @@ export default function EventsPage() {
                 <div>
                   <p className="field-tag">{activeDayLabel}</p>
                   <h2 className="mt-2 font-serif text-2xl font-semibold text-field-ink">
-                    {selectedDay ? '当天未结束日程' : '接下来活动'}
+                    {selectedDay ? '当天活动' : '接下来活动'}
                   </h2>
                   <p className="mt-2 text-xs leading-5 text-field-soft">
-                    {selectedDay ? '右侧只保留当天尚未结束的行程；再次点击日期可返回全部结果。' : '已结束和已取消的活动不再占位，最近的未结束活动排在最前面。'}
+                    {selectedDay
+                      ? '右侧显示当天全部活动并突出对应卡片；再次点击日期可返回全部结果。'
+                      : '鼠标停在右侧活动上可在日历定位；点击有活动的日期可查看对应日程。'}
                   </p>
                 </div>
               </div>
             </div>
             {eventIndexEvents.length ? (
               <div className="grid gap-2.5">
-                {eventIndexEvents.map((event) => <EventListItem key={event.id} event={event} members={members} />)}
+                {eventIndexEvents.map((event) => {
+                  const isLinked = highlightedEventId
+                    ? highlightedEventId === event.id
+                    : selectedDay !== null && isEventOnDay(event, month, selectedDay)
+
+                  return (
+                    <EventListItem
+                      key={event.id}
+                      event={event}
+                      members={members}
+                      isLinked={isLinked}
+                      cardRef={(element) => {
+                        eventCardRefs.current[event.id] = element
+                      }}
+                      onLinkStart={() => setHighlightedEventId(event.id)}
+                      onLinkEnd={() => setHighlightedEventId((current) => current === event.id ? null : current)}
+                    />
+                  )
+                })}
               </div>
             ) : (
               <StateBlock type="empty" title="暂无未结束活动" description="可以选择其他日期，或放宽成员、类型和状态筛选。" />

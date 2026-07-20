@@ -1,6 +1,10 @@
 import type { ReactNode } from 'react'
 import { Heart } from 'lucide-react'
-import { companionStickers } from '../../data/companionStickers'
+import { useLocation } from 'react-router-dom'
+import {
+  companionStickers,
+  getCompanionStickerFromPathname,
+} from '../../data/companionStickers'
 
 export function SectionHeader({
   eyebrow,
@@ -18,7 +22,9 @@ export function SectionHeader({
   compact?: boolean
 }) {
   const HeadingTag = level === 1 ? 'h1' : 'h2'
-  const sticker = companionStickers[title.length % companionStickers.length]
+  const location = useLocation()
+  const memberSticker = getCompanionStickerFromPathname(location.pathname)
+  const sticker = memberSticker ?? companionStickers[title.length % companionStickers.length]
 
   return (
     <div className={`section-header-scrapbook ${compact ? 'mb-5 gap-3 md:mb-6' : 'mb-7 gap-4 md:mb-8'} flex flex-col sm:flex-row sm:items-end sm:justify-between`}>

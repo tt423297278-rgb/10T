@@ -1,3 +1,4 @@
+import { useLayoutEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { SiteFooter } from '../components/layout/SiteFooter'
@@ -12,6 +13,10 @@ export function AppLayout() {
   const toast = useAppStore((state) => state.toast)
   const location = useLocation()
   const reduceMotion = useReducedMotion()
+
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }, [location.pathname])
 
   return (
     <div className="min-h-dvh">

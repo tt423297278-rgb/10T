@@ -1,12 +1,15 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
-import { Camera, ImagePlus, MapPin, ShieldCheck, Star, UtensilsCrossed, X } from 'lucide-react'
+import { Camera, ImagePlus, MapPin, MessageSquareText, ShieldCheck, Star, UtensilsCrossed, X } from 'lucide-react'
 import { Button } from '../common/Button'
 import {
   canteenRatingDimensions,
+  canteenRatingReviewMaxLength,
   emptyCanteenRatingScores,
   getCanteenOverallRating,
+  normalizeCanteenRatingReview,
+  validateCanteenRatingReview,
   validateCanteenRatingScores,
   type CanteenRatingDimension,
 } from '../../features/canteen/canteenRatings'
@@ -271,7 +274,7 @@ interface CanteenRatingDialogProps {
   returnTo: string
   isSaving: boolean
   onClose: () => void
-  onSubmit: (scores: CanteenRatingScores, imageFiles: File[]) => Promise<void>
+  onSubmit: (scores: CanteenRatingScores, reviewText: string, imageFiles: File[]) => Promise<void>
 }
 
 export function CanteenRatingDialog({
@@ -290,7 +293,9 @@ export function CanteenRatingDialog({
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const dialogRef = useRef<HTMLElement>(null)
   const previewUrlsRef = useRef(new Set<string>())
+  const reviewInputId = useId()
   const [scores, setScores] = useState<CanteenRatingScores>(emptyCanteenRatingScores)
+  const [reviewText, setReviewText] = useState('')
   const [visitedConfirmed, setVisitedConfirmed] = useState(false)
   const [photoDrafts, setPhotoDrafts] = useState<RatingPhotoDraft[]>([])
   const [photoError, setPhotoError] = useState<string | null>(null)
@@ -304,8 +309,10 @@ export function CanteenRatingDialog({
         value: ownRating.value,
         environment: ownRating.environment,
       })
+      setReviewText(ownRating.reviewText)
     } else if (!ownRatingLoading) {
       setScores(emptyCanteenRatingScores)
+      setReviewText('')
     }
   }, [ownRating, ownRatingLoading, place.id])
 
@@ -396,10 +403,18 @@ export function CanteenRatingDialog({
       setErrorMessage('请先确认你已经实际到店消费过。')
       return
     }
+    if (!validateCanteenRatingReview(reviewText)) {
+      setErrorMessage(`一句话点评最多 ${canteenRatingReviewMaxLength} 个字。`)
+      return
+    }
 
     setErrorMessage(null)
     try {
-      await onSubmit(scores, photoDrafts.map((draft) => draft.file))
+      await onSubmit(
+        scores,
+        normalizeCanteenRatingReview(reviewText),
+        photoDrafts.map((draft) => draft.file),
+      )
     } catch (error) {
       setErrorMessage(toCanteenRatingMessage(error))
     }
@@ -457,7 +472,7 @@ export function CanteenRatingDialog({
           {!isConfigured ? (
             <div className="canteen-rating-preview-note mt-4" role="status">
               <ShieldCheck size={18} strokeWidth={1.8} aria-hidden="true" />
-              <p><strong>本地预览：</strong>评分与图片选择都可体验，但不会保存或上传。</p>
+              <p><strong>本地预览：</strong>评分、文字和图片选择都可体验，但不会保存或上传。</p>
             </div>
           ) : !userId ? (
             <div className="mt-5 rounded-[14px] border border-paper-line bg-field-muted/35 p-4 text-sm leading-6 text-field-ink">
@@ -512,6 +527,32 @@ export function CanteenRatingDialog({
                   />
                 ))}
               </div>
+
+              <section className="canteen-review-section" aria-labelledby={`${reviewInputId}-label`}>
+                <div className="flex flex-wrap items-end justify-between gap-2">
+                  <div>
+                    <label id={`${reviewInputId}-label`} htmlFor={reviewInputId} className="flex items-center gap-2 font-serif text-lg font-semibold text-field-ink">
+                      <MessageSquareText size={18} strokeWidth={1.8} aria-hidden="true" />
+                      写一句到店感受
+                    </label>
+                    <p id={`${reviewInputId}-hint`} className="mt-1 text-sm text-field-soft">选填。可以写味道、服务、排队或下次还想点什么。</p>
+                  </div>
+                  <span className="text-xs font-semibold tabular-nums text-field-soft">{reviewText.length}/{canteenRatingReviewMaxLength}</span>
+                </div>
+                <textarea
+                  id={reviewInputId}
+                  value={reviewText}
+                  rows={2}
+                  maxLength={canteenRatingReviewMaxLength}
+                  aria-describedby={`${reviewInputId}-hint`}
+                  placeholder="例如：锅底很香，服务也很热情，下次还会来。"
+                  onChange={(event) => {
+                    setReviewText(event.target.value)
+                    setErrorMessage(null)
+                  }}
+                  className="canteen-review-input"
+                />
+              </section>
 
               <RatingPhotoPicker
                 drafts={photoDrafts}
