@@ -130,10 +130,10 @@
 
 .agri-board-header h2 {
   max-width: 52rem;
-  font-family: 'STKaiti', 'KaiTi', 'FZKai-Z03', var(--font-serif);
-  font-size: clamp(3rem, 6.4vw, 6.2rem) !important;
-  font-weight: 900 !important;
-  line-height: 0.98 !important;
+  font-family: var(--font-heading);
+  font-size: clamp(2.75rem, 5vw, 4.8rem) !important;
+  font-weight: 700 !important;
+  line-height: 1.08 !important;
   color: var(--aid-ink) !important;
   letter-spacing: 0 !important;
   text-shadow: 1px 1px 0 rgb(61 45 24 / 0.12);
@@ -143,7 +143,7 @@
   max-width: 58rem !important;
   margin-top: 1rem !important;
   padding: 0.65rem 1rem;
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: clamp(0.94rem, 1.3vw, 1.1rem) !important;
   font-weight: 600;
   line-height: 1.75 !important;
@@ -166,7 +166,7 @@
 }
 
 .agri-board-stamp strong {
-  font-family: 'STKaiti', 'KaiTi', var(--font-serif);
+  font-family: var(--font-heading);
   font-size: 1.2rem !important;
 }
 
@@ -290,7 +290,7 @@
 .agri-board-map-head h3,
 .agri-board-archive-head h3,
 .agri-board-section-head h3 {
-  font-family: 'STKaiti', 'KaiTi', var(--font-serif) !important;
+  font-family: var(--font-heading) !important;
   color: var(--aid-ink) !important;
 }
 
@@ -301,7 +301,7 @@
 .agri-board-map-stats span {
   padding: 0.3rem 0.52rem !important;
   font-family: var(--font-mono);
-  font-size: 0.68rem !important;
+  font-size: 0.75rem !important;
   color: var(--aid-olive-dark) !important;
   border: 1px dashed rgb(98 117 58 / 0.36) !important;
   border-radius: 50% 45% 48% 42% !important;
@@ -383,7 +383,7 @@
 }
 
 .agri-board-year-heading span {
-  font-family: 'STKaiti', 'KaiTi', var(--font-serif);
+  font-family: var(--font-heading);
   font-size: 1.65rem;
   font-weight: 900;
   line-height: 1;
@@ -395,7 +395,7 @@
 
 .agri-board-year-heading small {
   font-family: var(--font-mono);
-  font-size: 0.63rem;
+  font-size: 0.7rem;
   opacity: 0.78;
 }
 
@@ -520,7 +520,7 @@
   top: 0.35rem;
   left: 0.45rem;
   font-family: var(--font-mono);
-  font-size: 0.52rem !important;
+  font-size: 0.625rem !important;
   color: var(--aid-brown) !important;
   letter-spacing: 0.05em !important;
 }
@@ -708,9 +708,9 @@
   justify-self: center;
   width: fit-content !important;
   padding: 0.2rem 0.48rem !important;
-  font-family: 'STKaiti', 'KaiTi', var(--font-serif) !important;
+  font-family: var(--font-heading) !important;
   font-size: 0.82rem !important;
-  font-weight: 900 !important;
+  font-weight: 700 !important;
   color: #fff9e9 !important;
   border: 0 !important;
   border-radius: 0 !important;
@@ -722,9 +722,9 @@
   display: -webkit-box !important;
   min-height: 3.15rem !important;
   overflow: hidden !important;
-  font-family: 'STKaiti', 'KaiTi', var(--font-serif) !important;
+  font-family: var(--font-heading) !important;
   font-size: 0.86rem !important;
-  font-weight: 900 !important;
+  font-weight: 700 !important;
   line-height: 1.25 !important;
   color: var(--aid-ink) !important;
   -webkit-box-orient: vertical;
@@ -737,7 +737,7 @@
   max-width: 100%;
   padding: 0.12rem 0.35rem !important;
   overflow: hidden;
-  font-size: 0.58rem !important;
+  font-size: 0.68rem !important;
   font-weight: 800 !important;
   color: var(--aid-year-accent) !important;
   text-overflow: ellipsis;
@@ -818,7 +818,7 @@
   right: 0.72rem;
   bottom: 0.65rem;
   padding: 0.22rem 0.42rem;
-  font-size: 0.62rem;
+  font-size: 0.7rem;
   font-weight: 800;
   color: #fff8e8;
   border-radius: 3px;
@@ -848,7 +848,7 @@
 .agri-board-detail-meta span,
 .agri-board-detail-facts span {
   padding: 0.22rem 0.38rem !important;
-  font-size: 0.65rem !important;
+  font-size: 0.7rem !important;
   color: var(--aid-olive-dark) !important;
   border: 1px dashed rgb(98 117 58 / 0.28) !important;
   border-radius: 3px !important;
@@ -856,7 +856,7 @@
 }
 
 .agri-board-detail h3 {
-  font-family: 'STKaiti', 'KaiTi', var(--font-serif) !important;
+  font-family: var(--font-heading) !important;
   font-size: 1.35rem !important;
   color: var(--aid-ink) !important;
 }
@@ -880,7 +880,7 @@
 
 .agri-board-detail-source > span {
   min-width: 0;
-  font-size: 0.66rem;
+  font-size: 0.72rem;
   line-height: 1.45;
   color: var(--aid-brown);
 }
@@ -1010,7 +1010,7 @@
 .agri-board-region-card h4,
 .agri-board-mode-card h4,
 .agri-board-recognition-card h4 {
-  font-family: 'STKaiti', 'KaiTi', var(--font-serif) !important;
+  font-family: var(--font-heading) !important;
   color: var(--aid-ink) !important;
 }
 
@@ -1106,13 +1106,13 @@
 
 .agri-board-archive-file-type {
   align-self: end;
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 800;
   color: var(--aid-brown);
 }
 
 .agri-board-archive-file strong {
-  font-family: 'STKaiti', 'KaiTi', var(--font-serif);
+  font-family: var(--font-heading);
   font-size: 1.15rem;
 }
 
@@ -1205,7 +1205,7 @@
   }
 
   .agri-board-header h2 {
-    font-size: clamp(2.5rem, 14vw, 4rem) !important;
+    font-size: clamp(2.25rem, 11vw, 3.25rem) !important;
   }
 
   .agri-board-intro {
@@ -1218,7 +1218,7 @@
     justify-self: end;
     width: 5.2rem !important;
     margin: -0.55rem 0.2rem 0 0;
-    font-size: 0.68rem;
+    font-size: 0.72rem;
   }
 
   .agri-board-stamp strong {

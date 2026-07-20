@@ -123,8 +123,9 @@
 ## CanteenRating
 - 用途：记录登录用户对静态餐厅记录的真实到店评分。
 - 主键：`id uuid`；餐厅关联使用稳定的 `place_id text`，不对静态 JSON 建外键。
-- 字段：`user_id`, `place_id`, `taste_score`, `service_score`, `value_score`, `environment_score`, `visited_confirmed`, `created_at`, `updated_at`。
+- 字段：`user_id`, `place_id`, `taste_score`, `service_score`, `value_score`, `environment_score`, `review_text`, `visited_confirmed`, `created_at`, `updated_at`。
 - 分值：四项均为 `0.5–5.0`，只允许半星递增；综合分为四项均值。
+- 文字点评：选填，提交时压缩多余空白，最长 120 字；当前只对评价本人可读，公开前需要内容审核。
 - 唯一约束：`user_id + place_id`，再次提交通过 upsert 更新原记录，不重复计数。
 - 权限：用户只可读写自己的评分；公开页面通过安全聚合 RPC 读取餐厅人数与各项均分，不返回 `user_id`。
 - 到店边界：当前采用用户自我确认，不宣称已通过订单、定位或管理员人工核验。

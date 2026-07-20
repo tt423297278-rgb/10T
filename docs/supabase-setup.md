@@ -32,6 +32,7 @@ supabase/migrations/202607010002_check_in_rpc.sql
 supabase/migrations/202607130003_canteen_ratings.sql
 supabase/migrations/202607150001_canteen_rating_media.sql
 supabase/migrations/202607150002_canteen_place_submissions.sql
+supabase/migrations/202607200001_canteen_rating_review_text.sql
 ```
 
 已包含：
@@ -43,6 +44,7 @@ supabase/migrations/202607150002_canteen_place_submissions.sql
 - `member-media`、`post-media` 与私有 `canteen-rating-media` Storage bucket 和基础对象策略。
 - `perform_daily_check_in()` RPC，用服务端时间、用户身份、唯一约束和 advisory lock 防止重复签到。
 - `canteen_ratings` 四维评分表、半星校验、到店确认、一人一店唯一约束与 RLS。
+- `canteen_ratings.review_text` 一句话点评字段，选填且最长 120 字。
 - `get_canteen_rating_summaries()` 聚合 RPC，只公开评分人数和均分，不公开个人评分记录。
 - `canteen_place_submissions` 新餐厅投稿表：登录用户只能创建和读取自己的待审核投稿，管理员负责审核。
 
@@ -54,6 +56,7 @@ supabase/migrations/202607150002_canteen_place_submissions.sql
 - 前端提交前要求用户确认实际到店；当前是自我声明，不等同于订单或定位核验。
 - 本地未配置 Supabase 时，评分弹窗会提供完整交互预览，但禁用提交且不伪造保存成功；尚未执行 `202607130003_canteen_ratings.sql` 时，真实读取与写入会明确报错。
 - `202607150001_canteen_rating_media.sql` 新增评分图片表与私有 `canteen-rating-media` Storage bucket；每条评价最多保留 4 张图片，单张不超过 10MB。
+- `202607200001_canteen_rating_review_text.sql` 新增一句话点评字段；旧项目需要执行该迁移后才能保存和回填文字点评。
 
 ## 食堂新餐厅投稿
 

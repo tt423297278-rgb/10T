@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { companionStickers, getCompanionSticker } from './companionStickers'
+import {
+  companionStickers,
+  getCompanionSticker,
+  getCompanionStickerFromPathname,
+} from './companionStickers'
 
 describe('companionStickers', () => {
   it('keeps one unique sticker for every member', () => {
@@ -11,5 +15,15 @@ describe('companionStickers', () => {
   it('resolves a sticker from a member id', () => {
     expect(getCompanionSticker('member-10')?.name).toBe('王一珩')
     expect(getCompanionSticker('missing-member')).toBeUndefined()
+  })
+
+  it('locks member-detail routes to that member sticker', () => {
+    companionStickers.forEach((sticker) => {
+      expect(getCompanionStickerFromPathname(`/members/${sticker.memberId}`)).toEqual(sticker)
+    })
+
+    expect(getCompanionStickerFromPathname('/members')).toBeUndefined()
+    expect(getCompanionStickerFromPathname('/events/member-1')).toBeUndefined()
+    expect(getCompanionStickerFromPathname('/members/member-11')).toBeUndefined()
   })
 })

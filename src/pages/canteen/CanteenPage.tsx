@@ -307,8 +307,8 @@ export default function CanteenPage() {
   const closePickDialog = useCallback(() => setPickDialogOpen(false), [])
   const closeSubmissionDialog = useCallback(() => setSubmissionDialogOpen(false), [])
 
-  const submitRating = async (scores: CanteenRatingScores, imageFiles: File[]) => {
-    await saveRatingMutation.mutateAsync({ scores, imageFiles })
+  const submitRating = async (scores: CanteenRatingScores, reviewText: string, imageFiles: File[]) => {
+    await saveRatingMutation.mutateAsync({ scores, reviewText, imageFiles })
     setToast(ownRatingQuery.data ? '评分已更新' : '评分已提交')
     closeRatingDialog()
   }

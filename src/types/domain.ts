@@ -176,6 +176,7 @@ export interface CanteenRatingScores {
 
 export interface CanteenRating extends CanteenRatingScores {
   placeId: string
+  reviewText: string
   updatedAt: string
 }
 

@@ -1,5 +1,9 @@
 import { supabase } from '../lib/supabase/client'
-import { validateCanteenRatingScores } from '../features/canteen/canteenRatings'
+import {
+  normalizeCanteenRatingReview,
+  validateCanteenRatingReview,
+  validateCanteenRatingScores,
+} from '../features/canteen/canteenRatings'
 import {
   canteenRatingImageLimit,
   validateCanteenRatingImages,
@@ -22,6 +26,7 @@ interface OwnRatingRow {
   service_score: number | string
   value_score: number | string
   environment_score: number | string
+  review_text: string | null
   updated_at: string
 }
 
@@ -118,7 +123,7 @@ export const canteenRatingService = {
     const userId = await requireUserId()
     const { data, error } = await supabase!
       .from('canteen_ratings')
-      .select('place_id,taste_score,service_score,value_score,environment_score,updated_at')
+      .select('place_id,taste_score,service_score,value_score,environment_score,review_text,updated_at')
       .eq('user_id', userId)
       .eq('place_id', placeId)
       .maybeSingle()
@@ -132,16 +137,27 @@ export const canteenRatingService = {
       service: toNumber(row.service_score),
       value: toNumber(row.value_score),
       environment: toNumber(row.environment_score),
+      reviewText: row.review_text ?? '',
       updatedAt: row.updated_at,
     }
   },
 
-  async saveRating(placeId: string, scores: CanteenRatingScores, imageFiles: File[] = []) {
+  async saveRating(
+    placeId: string,
+    scores: CanteenRatingScores,
+    reviewText: string,
+    imageFiles: File[] = [],
+  ) {
     if (!validateCanteenRatingScores(scores)) {
       throw new Error('Invalid canteen rating scores')
     }
+    if (!validateCanteenRatingReview(reviewText)) {
+      throw new Error('Invalid canteen rating review')
+    }
     const imageValidation = validateCanteenRatingImages(imageFiles)
     if (!imageValidation.ok) throw new Error(imageValidation.message)
+
+    const normalizedReviewText = normalizeCanteenRatingReview(reviewText)
 
     const userId = await requireUserId()
     const { data, error } = await supabase!.from('canteen_ratings').upsert(
@@ -152,6 +168,7 @@ export const canteenRatingService = {
         service_score: scores.service,
         value_score: scores.value,
         environment_score: scores.environment,
+        review_text: normalizedReviewText || null,
         visited_confirmed: true,
       },
       { onConflict: 'user_id,place_id' },
@@ -177,6 +194,7 @@ export function toCanteenRatingMessage(error: unknown) {
   if (normalized.includes('canteen-rating-media') || normalized.includes('canteen_rating_media')) {
     return '评价图片存储尚未部署，请先执行最新的 Supabase 迁移。'
   }
+  if (normalized.includes('invalid canteen rating review')) return '一句话点评最多 120 个字。'
   if (normalized.includes('invalid canteen rating')) return '请把四项评分都设置为 0.5–5 星。'
   return '评分保存失败，请稍后重试。'
 }
